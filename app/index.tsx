@@ -8,7 +8,7 @@ export default function HomeScreen() {
   const buttons = [
     { label: 'Kasa', icon: '💰', desc: 'Bilet oluştur', route: '/cashier' as const },
     { label: 'Kiosk', icon: '📱', desc: 'QR oku ve yıka', route: '/kiosk' as const },
-    { label: 'Yonetim', icon: '⚙️', desc: 'Admin paneli', route: '/admin' as const },
+    { label: 'Yönetim', icon: '⚙️', desc: 'Admin paneli', route: '/admin' as const },
   ];
 
   return (
@@ -16,8 +16,8 @@ export default function HomeScreen() {
       <View style={styles.gradient}>
         <View style={styles.content}>
           <Text style={styles.logo}>🚗💦</Text>
-          <Text style={styles.title}>Self-Servis{'\n'}Arac Yikama</Text>
-          <Text style={styles.subtitle}>QR Kodlu Dijital Odeme Sistemi</Text>
+          <Text style={styles.title}>Self-Servis{'\n'}Araç Yıkama</Text>
+          <Text style={styles.subtitle}>QR Kodlu Dijital Ödeme Sistemi</Text>
 
           <View style={styles.buttons}>
             {buttons.map((b) => (
@@ -34,7 +34,7 @@ export default function HomeScreen() {
             ))}
           </View>
 
-          <Text style={styles.footer}>5 Istasyon • Nakit / Kart • Aninda Yikama</Text>
+          <Text style={styles.footer}>5 İstasyon • Nakit / Kart • Anında Yıkama</Text>
         </View>
       </View>
     </View>

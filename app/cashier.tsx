@@ -18,7 +18,7 @@ export default function CashierScreen() {
   useEffect(() => {
     getPrograms()
       .then(setPrograms)
-      .catch(() => Alert.alert('Hata', 'Programlar yuklenemedi'))
+      .catch(() => Alert.alert('Hata', 'Programlar yüklenemedi'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -38,7 +38,7 @@ export default function CashierScreen() {
       playSuccess();
     } catch (e: any) {
       playError();
-      Alert.alert('Hata', e.message || 'Bilet olusturulamadi');
+      Alert.alert('Hata', e.message || 'Bilet oluşturulamadı');
     } finally {
       setCreating(false);
     }
@@ -63,7 +63,7 @@ export default function CashierScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Steps indicator */}
       <View style={styles.steps}>
-        {['Program', 'Odeme', 'Bilet'].map((label, i) => {
+        {['Program', 'Ödeme', 'Bilet'].map((label, i) => {
           const stepIndex = ['program', 'payment', 'ticket'].indexOf(step);
           return (
             <View key={label} style={styles.stepRow}>
@@ -79,7 +79,7 @@ export default function CashierScreen() {
 
       {step === 'program' && (
         <View>
-          <Text style={styles.heading}>Program Secin</Text>
+          <Text style={styles.heading}>Program Seçin</Text>
           <ProgramGrid
             programs={programs}
             selectedId={null}
@@ -90,7 +90,7 @@ export default function CashierScreen() {
 
       {step === 'payment' && selectedProgram && (
         <View>
-          <Text style={styles.heading}>Odeme Yontemi</Text>
+          <Text style={styles.heading}>Ödeme Yöntemi</Text>
           <View style={styles.selectedCard}>
             <Text style={styles.selectedIcon}>{selectedProgram.icon}</Text>
             <View>
@@ -129,7 +129,7 @@ export default function CashierScreen() {
       {step === 'ticket' && ticketData && (
         <View style={styles.ticketContainer}>
           <Text style={styles.successIcon}>✅</Text>
-          <Text style={styles.successText}>Bilet Olusturuldu!</Text>
+          <Text style={styles.successText}>Bilet Oluşturuldu!</Text>
 
           <View style={styles.qrCard}>
             <QRCode value={ticketData.ticket.qr_code} size={200} />

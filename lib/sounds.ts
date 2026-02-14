@@ -1,21 +1,29 @@
+import { Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
+const isWeb = Platform.OS === 'web';
+
 export async function playClick() {
-  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  if (isWeb) return;
+  try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
 }
 
 export async function playSuccess() {
-  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  if (isWeb) return;
+  try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
 }
 
 export async function playError() {
-  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+  if (isWeb) return;
+  try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); } catch {}
 }
 
 export async function playBeep() {
-  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  if (isWeb) return;
+  try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
 }
 
 export async function playComplete() {
-  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  if (isWeb) return;
+  try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
 }

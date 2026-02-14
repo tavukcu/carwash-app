@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator, TextInput, Platform } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import StationGrid from '../components/StationGrid';
 import CountdownTimer from '../components/CountdownTimer';
@@ -29,7 +29,7 @@ export default function KioskScreen() {
       const data = await getStations();
       setStations(data);
     } catch {
-      Alert.alert('Hata', 'Istasyonlar yuklenemedi');
+      Alert.alert('Hata', 'İstasyonlar yüklenemedi');
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ export default function KioskScreen() {
       playSuccess();
     } catch (e: any) {
       playError();
-      Alert.alert('Gecersiz Bilet', e.message || 'QR kod dogrulanamadi');
+      Alert.alert('Geçersiz Bilet', e.message || 'QR kod doğrulanamadı');
       scanLock.current = false;
     } finally {
       setProcessing(false);
@@ -81,7 +81,7 @@ export default function KioskScreen() {
       playSuccess();
     } catch (e: any) {
       playError();
-      Alert.alert('Hata', e.message || 'Yikama baslatilamadi');
+      Alert.alert('Hata', e.message || 'Yıkama başlatılamadı');
     } finally {
       setProcessing(false);
     }
@@ -116,7 +116,7 @@ export default function KioskScreen() {
       {/* Station Selection */}
       {screen === 'stations' && (
         <View>
-          <Text style={styles.heading}>Istasyon Secin</Text>
+          <Text style={styles.heading}>İstasyon Seçin</Text>
           <StationGrid stations={stations} selectedId={null} onSelect={handleStationSelect} />
         </View>
       )}
@@ -125,45 +125,52 @@ export default function KioskScreen() {
       {screen === 'scan' && (
         <View>
           <Text style={styles.heading}>QR Kod Okutun</Text>
-          <Text style={styles.subtext}>{selectedStation?.name} secildi</Text>
+          <Text style={styles.subtext}>{selectedStation?.name} seçildi</Text>
 
-          {permission?.granted ? (
-            <View style={styles.cameraContainer}>
-              <CameraView
-                style={styles.camera}
-                barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-                onBarcodeScanned={handleBarCodeScanned}
-              />
-              {processing && (
-                <View style={styles.cameraOverlay}>
-                  <ActivityIndicator size="large" color="#fff" />
-                  <Text style={styles.overlayText}>Dogrulaniyor...</Text>
-                </View>
-              )}
-            </View>
+          {Platform.OS !== 'web' ? (
+            permission?.granted ? (
+              <View style={styles.cameraContainer}>
+                <CameraView
+                  style={styles.camera}
+                  barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+                  onBarcodeScanned={handleBarCodeScanned}
+                />
+                {processing && (
+                  <View style={styles.cameraOverlay}>
+                    <ActivityIndicator size="large" color="#fff" />
+                    <Text style={styles.overlayText}>Doğrulanıyor...</Text>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.permBtn} onPress={requestPermission}>
+                <Text style={styles.permText}>Kamera İzni Ver</Text>
+              </TouchableOpacity>
+            )
           ) : (
-            <TouchableOpacity style={styles.permBtn} onPress={requestPermission}>
-              <Text style={styles.permText}>Kamera Izni Ver</Text>
-            </TouchableOpacity>
+            <View style={styles.webCameraNotice}>
+              <Text style={styles.webCameraIcon}>📷</Text>
+              <Text style={styles.webCameraText}>Web tarayıcıda kamera kullanılamaz.{'\n'}QR kodunu aşağıya manuel girin.</Text>
+            </View>
           )}
 
-          <Text style={styles.orText}>veya manuel girin</Text>
+          <Text style={styles.orText}>{Platform.OS !== 'web' ? 'veya manuel girin' : 'QR kodunu girin'}</Text>
           <View style={styles.manualRow}>
             <TextInput
               style={styles.input}
               value={manualQR}
               onChangeText={setManualQR}
-              placeholder="QR kodu yazin..."
+              placeholder="QR kodu yazın..."
               placeholderTextColor="#94a3b8"
               autoCapitalize="none"
             />
             <TouchableOpacity style={styles.submitBtn} onPress={handleManualSubmit}>
-              <Text style={styles.submitText}>Dogrula</Text>
+              <Text style={styles.submitText}>Doğrula</Text>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={styles.backBtn} onPress={() => { playClick(); setScreen('stations'); }}>
-            <Text style={styles.backText}>← Istasyon Secimi</Text>
+            <Text style={styles.backText}>← İstasyon Seçimi</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -171,13 +178,13 @@ export default function KioskScreen() {
       {/* Confirmation */}
       {screen === 'confirm' && ticketInfo && (
         <View style={styles.confirmContainer}>
-          <Text style={styles.heading}>Yikama Onay</Text>
+          <Text style={styles.heading}>Yıkama Onay</Text>
 
           <View style={styles.confirmCard}>
             <Text style={styles.confirmIcon}>{ticketInfo.icon}</Text>
             <Text style={styles.confirmProgram}>{ticketInfo.program_name}</Text>
             <Text style={styles.confirmPrice}>{ticketInfo.program_price} TL</Text>
-            <Text style={styles.confirmDuration}>Sure: {Math.floor(ticketInfo.duration / 60)} dk</Text>
+            <Text style={styles.confirmDuration}>Süre: {Math.floor(ticketInfo.duration / 60)} dk</Text>
             <Text style={styles.confirmStation}>📍 {selectedStation?.name}</Text>
           </View>
 
@@ -189,7 +196,7 @@ export default function KioskScreen() {
             {processing ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.startText}>Yikamaya Basla</Text>
+              <Text style={styles.startText}>Yıkamaya Başla</Text>
             )}
           </TouchableOpacity>
 
@@ -213,9 +220,9 @@ export default function KioskScreen() {
       {screen === 'done' && (
         <View style={styles.doneContainer}>
           <Text style={styles.doneIcon}>✅</Text>
-          <Text style={styles.doneText}>Yikama Tamamlandi!</Text>
-          <Text style={styles.doneHint}>Aracinizi alabilirsiniz</Text>
-          <Text style={styles.autoReset}>5 saniye icinde sifirlanacak...</Text>
+          <Text style={styles.doneText}>Yıkama Tamamlandı!</Text>
+          <Text style={styles.doneHint}>Aracınızı alabilirsiniz</Text>
+          <Text style={styles.autoReset}>5 saniye içinde sıfırlanacak...</Text>
         </View>
       )}
     </ScrollView>
@@ -243,6 +250,12 @@ const styles = StyleSheet.create({
     alignItems: 'center', marginBottom: 16,
   },
   permText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  webCameraNotice: {
+    backgroundColor: '#fff7ed', borderRadius: 16, padding: 24, alignItems: 'center',
+    marginBottom: 16, borderWidth: 1, borderColor: '#fed7aa',
+  },
+  webCameraIcon: { fontSize: 36, marginBottom: 8 },
+  webCameraText: { fontSize: 14, color: '#9a3412', textAlign: 'center', lineHeight: 20 },
   orText: { textAlign: 'center', color: '#94a3b8', marginVertical: 12 },
   manualRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   input: {

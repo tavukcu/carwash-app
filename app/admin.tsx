@@ -14,7 +14,7 @@ type Tab = 'dashboard' | 'stations' | 'programs' | 'tickets' | 'reports';
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'dashboard', label: 'Panel', icon: '📊' },
-  { key: 'stations', label: 'Istasyonlar', icon: '🚿' },
+  { key: 'stations', label: 'İstasyonlar', icon: '🚿' },
   { key: 'programs', label: 'Programlar', icon: '🧴' },
   { key: 'tickets', label: 'Biletler', icon: '🎫' },
   { key: 'reports', label: 'Raporlar', icon: '📈' },
@@ -46,11 +46,7 @@ export default function AdminScreen() {
 
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadTab();
-  }, [tab, ticketFilter, reportPeriod]);
-
-  const loadTab = async () => {
+  const loadTab = useCallback(async () => {
     setLoading(true);
     try {
       switch (tab) {
@@ -75,13 +71,17 @@ export default function AdminScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tab, ticketFilter, reportPeriod]);
+
+  useEffect(() => {
+    loadTab();
+  }, [loadTab]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await loadTab();
     setRefreshing(false);
-  }, [tab, ticketFilter, reportPeriod]);
+  }, [loadTab]);
 
   const handleStationStatus = async (id: number, status: string) => {
     playClick();
@@ -137,11 +137,11 @@ export default function AdminScreen() {
               <View>
                 <Text style={styles.heading}>Dashboard</Text>
                 <View style={styles.statGrid}>
-                  <StatCard icon="💰" label="Bugun Gelir" value={`${dashboard.todayIncome} TL`} color="#16a34a" />
-                  <StatCard icon="🎫" label="Bugun Bilet" value={String(dashboard.todayTickets)} color="#2563eb" />
-                  <StatCard icon="🚿" label="Aktif Istasyon" value={String(dashboard.activeStations)} color="#f59e0b" />
+                  <StatCard icon="💰" label="Bugün Gelir" value={`${dashboard.todayIncome} TL`} color="#16a34a" />
+                  <StatCard icon="🎫" label="Bugün Bilet" value={String(dashboard.todayTickets)} color="#2563eb" />
+                  <StatCard icon="🚿" label="Aktif İstasyon" value={String(dashboard.activeStations)} color="#f59e0b" />
                   <StatCard icon="⏳" label="Bekleyen Bilet" value={String(dashboard.pendingTickets)} color="#8b5cf6" />
-                  <StatCard icon="🔄" label="Toplam Yikama" value={String(dashboard.totalWashes)} color="#06b6d4" />
+                  <StatCard icon="🔄" label="Toplam Yıkama" value={String(dashboard.totalWashes)} color="#06b6d4" />
                   <StatCard icon="💎" label="Toplam Gelir" value={`${dashboard.totalIncome} TL`} color="#ec4899" />
                 </View>
               </View>
@@ -150,7 +150,7 @@ export default function AdminScreen() {
             {/* Stations */}
             {tab === 'stations' && (
               <View>
-                <Text style={styles.heading}>Istasyonlar</Text>
+                <Text style={styles.heading}>İstasyonlar</Text>
                 {stations.map((s) => (
                   <View key={s.id} style={styles.listCard}>
                     <View style={styles.listHeader}>
@@ -162,13 +162,13 @@ export default function AdminScreen() {
                         style={[styles.smallBtn, { backgroundColor: '#16a34a' }]}
                         onPress={() => handleStationStatus(s.id, 'idle')}
                       >
-                        <Text style={styles.smallBtnText}>Bos</Text>
+                        <Text style={styles.smallBtnText}>Boş</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.smallBtn, { backgroundColor: '#dc2626' }]}
                         onPress={() => handleStationStatus(s.id, 'maintenance')}
                       >
-                        <Text style={styles.smallBtnText}>Bakimda</Text>
+                        <Text style={styles.smallBtnText}>Bakımda</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -223,7 +223,7 @@ export default function AdminScreen() {
                           setEditDuration(String(Math.floor(p.duration / 60)));
                         }}
                       >
-                        <Text style={styles.smallBtnText}>Duzenle</Text>
+                        <Text style={styles.smallBtnText}>Düzenle</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -237,9 +237,9 @@ export default function AdminScreen() {
                 <Text style={styles.heading}>Biletler</Text>
                 <View style={styles.filterRow}>
                   {[
-                    { key: '', label: 'Tumu' },
+                    { key: '', label: 'Tümü' },
                     { key: 'pending', label: 'Bekleyen' },
-                    { key: 'used', label: 'Kullanildi' },
+                    { key: 'used', label: 'Kullanıldı' },
                   ].map((f) => (
                     <TouchableOpacity
                       key={f.key}
@@ -254,7 +254,7 @@ export default function AdminScreen() {
                 </View>
 
                 {tickets.length === 0 ? (
-                  <Text style={styles.emptyText}>Bilet bulunamadi</Text>
+                  <Text style={styles.emptyText}>Bilet bulunamadı</Text>
                 ) : (
                   tickets.map((t) => (
                     <View key={t.id} style={styles.listCard}>
@@ -281,9 +281,9 @@ export default function AdminScreen() {
                 <Text style={styles.heading}>Raporlar</Text>
                 <View style={styles.filterRow}>
                   {[
-                    { key: 'daily' as const, label: 'Gunluk' },
-                    { key: 'weekly' as const, label: 'Haftalik' },
-                    { key: 'monthly' as const, label: 'Aylik' },
+                    { key: 'daily' as const, label: 'Günlük' },
+                    { key: 'weekly' as const, label: 'Haftalık' },
+                    { key: 'monthly' as const, label: 'Aylık' },
                   ].map((f) => (
                     <TouchableOpacity
                       key={f.key}
@@ -305,14 +305,14 @@ export default function AdminScreen() {
                   reports.report.map((r, i) => (
                     <View key={i} style={styles.reportRow}>
                       <Text style={styles.reportDate}>{r.date}</Text>
-                      <Text style={styles.reportCount}>{r.wash_count} yikama</Text>
+                      <Text style={styles.reportCount}>{r.wash_count} yıkama</Text>
                       <Text style={styles.reportIncome}>{r.total_income} TL</Text>
                     </View>
                   ))
                 )}
 
                 {/* Program Stats */}
-                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Program Istatistikleri</Text>
+                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Program İstatistikleri</Text>
                 {reports.programStats.map((ps, i) => (
                   <View key={i} style={styles.reportRow}>
                     <Text style={styles.reportDate}>{ps.name}</Text>
@@ -341,12 +341,12 @@ function StatCard({ icon, label, value, color }: { icon: string; label: string; 
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; text: string; label: string }> = {
-    idle: { bg: '#dcfce7', text: '#16a34a', label: 'Bos' },
+    idle: { bg: '#dcfce7', text: '#16a34a', label: 'Boş' },
     active: { bg: '#fef3c7', text: '#f59e0b', label: 'Aktif' },
-    maintenance: { bg: '#fee2e2', text: '#dc2626', label: 'Bakimda' },
+    maintenance: { bg: '#fee2e2', text: '#dc2626', label: 'Bakımda' },
     pending: { bg: '#fef3c7', text: '#f59e0b', label: 'Bekliyor' },
-    used: { bg: '#dcfce7', text: '#16a34a', label: 'Kullanildi' },
-    expired: { bg: '#fee2e2', text: '#dc2626', label: 'Suresi Doldu' },
+    used: { bg: '#dcfce7', text: '#16a34a', label: 'Kullanıldı' },
+    expired: { bg: '#fee2e2', text: '#dc2626', label: 'Süresi Doldu' },
   };
   const s = map[status] || map.idle;
   return (
