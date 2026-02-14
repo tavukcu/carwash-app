@@ -1,38 +1,38 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
-import ProgramGrid from '../components/ProgramGrid';
-import { Program, getPrograms, createTicket, CreateTicketResponse } from '../lib/api';
+import PackageGrid from '../components/PackageGrid';
+import { TimePackage, getPackages, createTicket, CreateTicketResponse } from '../lib/api';
 import { playClick, playSuccess, playError } from '../lib/sounds';
 
-type Step = 'program' | 'payment' | 'ticket';
+type Step = 'package' | 'payment' | 'ticket';
 
 export default function CashierScreen() {
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [packages, setPackages] = useState<TimePackage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState<Step>('program');
-  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  const [step, setStep] = useState<Step>('package');
+  const [selectedPackage, setSelectedPackage] = useState<TimePackage | null>(null);
   const [ticketData, setTicketData] = useState<CreateTicketResponse | null>(null);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    getPrograms()
-      .then(setPrograms)
-      .catch(() => Alert.alert('Hata', 'Programlar yüklenemedi'))
+    getPackages()
+      .then(setPackages)
+      .catch(() => Alert.alert('Hata', 'Paketler yüklenemedi'))
       .finally(() => setLoading(false));
   }, []);
 
-  const handleProgramSelect = (p: Program) => {
-    setSelectedProgram(p);
+  const handlePackageSelect = (p: TimePackage) => {
+    setSelectedPackage(p);
     setStep('payment');
   };
 
   const handlePayment = async (method: 'cash' | 'card') => {
-    if (!selectedProgram) return;
+    if (!selectedPackage) return;
     playClick();
     setCreating(true);
     try {
-      const data = await createTicket(selectedProgram.id, method);
+      const data = await createTicket(selectedPackage.id, method);
       setTicketData(data);
       setStep('ticket');
       playSuccess();
@@ -46,8 +46,8 @@ export default function CashierScreen() {
 
   const reset = () => {
     playClick();
-    setStep('program');
-    setSelectedProgram(null);
+    setStep('package');
+    setSelectedPackage(null);
     setTicketData(null);
   };
 
@@ -63,8 +63,8 @@ export default function CashierScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Steps indicator */}
       <View style={styles.steps}>
-        {['Program', 'Ödeme', 'Bilet'].map((label, i) => {
-          const stepIndex = ['program', 'payment', 'ticket'].indexOf(step);
+        {['Paket', 'Ödeme', 'Bilet'].map((label, i) => {
+          const stepIndex = ['package', 'payment', 'ticket'].indexOf(step);
           return (
             <View key={label} style={styles.stepRow}>
               <View style={[styles.stepCircle, i <= stepIndex && styles.stepActive]}>
@@ -77,25 +77,25 @@ export default function CashierScreen() {
         })}
       </View>
 
-      {step === 'program' && (
+      {step === 'package' && (
         <View>
-          <Text style={styles.heading}>Program Seçin</Text>
-          <ProgramGrid
-            programs={programs}
+          <Text style={styles.heading}>Süre Paketi Seçin</Text>
+          <PackageGrid
+            packages={packages}
             selectedId={null}
-            onSelect={handleProgramSelect}
+            onSelect={handlePackageSelect}
           />
         </View>
       )}
 
-      {step === 'payment' && selectedProgram && (
+      {step === 'payment' && selectedPackage && (
         <View>
           <Text style={styles.heading}>Ödeme Yöntemi</Text>
           <View style={styles.selectedCard}>
-            <Text style={styles.selectedIcon}>{selectedProgram.icon}</Text>
+            <Text style={styles.selectedIcon}>{selectedPackage.icon}</Text>
             <View>
-              <Text style={styles.selectedName}>{selectedProgram.name}</Text>
-              <Text style={styles.selectedPrice}>{selectedProgram.price} TL</Text>
+              <Text style={styles.selectedName}>{selectedPackage.name}</Text>
+              <Text style={styles.selectedPrice}>{selectedPackage.price} TL</Text>
             </View>
           </View>
 
@@ -120,7 +120,7 @@ export default function CashierScreen() {
 
           {creating && <ActivityIndicator style={{ marginTop: 16 }} color="#2563eb" />}
 
-          <TouchableOpacity style={styles.backBtn} onPress={() => { playClick(); setStep('program'); }}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => { playClick(); setStep('package'); }}>
             <Text style={styles.backText}>← Geri</Text>
           </TouchableOpacity>
         </View>
@@ -137,7 +137,7 @@ export default function CashierScreen() {
 
           <Text style={styles.ticketId}>Bilet #{ticketData.ticket.id}</Text>
           <Text style={styles.ticketInfo}>
-            {ticketData.program.icon} {ticketData.program.name} - {ticketData.program.price} TL
+            {ticketData.package.icon} {ticketData.package.name} - {ticketData.package.price} TL
           </Text>
           <Text style={styles.ticketHint}>QR kodu kiosk ekraninda okutun</Text>
 

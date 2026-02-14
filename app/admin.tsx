@@ -4,18 +4,18 @@ import {
   ActivityIndicator, Alert, TextInput, RefreshControl,
 } from 'react-native';
 import {
-  DashboardData, Station, Program, Ticket, ReportsResponse,
-  getDashboard, getStations, getPrograms, getTickets,
-  updateStation, updateProgram, getReports,
+  DashboardData, Station, TimePackage, Ticket, ReportsResponse,
+  getDashboard, getStations, getPackages, getTickets,
+  updateStation, updatePackage, createPackage, deletePackage, getReports,
 } from '../lib/api';
 import { playClick } from '../lib/sounds';
 
-type Tab = 'dashboard' | 'stations' | 'programs' | 'tickets' | 'reports';
+type Tab = 'dashboard' | 'stations' | 'packages' | 'tickets' | 'reports';
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'dashboard', label: 'Panel', icon: '📊' },
   { key: 'stations', label: 'İstasyonlar', icon: '🚿' },
-  { key: 'programs', label: 'Programlar', icon: '🧴' },
+  { key: 'packages', label: 'Paketler', icon: '⏱️' },
   { key: 'tickets', label: 'Biletler', icon: '🎫' },
   { key: 'reports', label: 'Raporlar', icon: '📈' },
 ];
@@ -30,11 +30,18 @@ export default function AdminScreen() {
   // Stations
   const [stations, setStations] = useState<Station[]>([]);
 
-  // Programs
-  const [programs, setPrograms] = useState<Program[]>([]);
-  const [editingProgram, setEditingProgram] = useState<number | null>(null);
+  // Packages
+  const [packages, setPackages] = useState<TimePackage[]>([]);
+  const [editingPackage, setEditingPackage] = useState<number | null>(null);
+  const [editName, setEditName] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editDuration, setEditDuration] = useState('');
+
+  // New package form
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newPrice, setNewPrice] = useState('');
+  const [newDuration, setNewDuration] = useState('');
 
   // Tickets
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -56,8 +63,8 @@ export default function AdminScreen() {
         case 'stations':
           setStations(await getStations());
           break;
-        case 'programs':
-          setPrograms(await getPrograms());
+        case 'packages':
+          setPackages(await getPackages());
           break;
         case 'tickets':
           setTickets(await getTickets(ticketFilter || undefined));
@@ -93,18 +100,64 @@ export default function AdminScreen() {
     }
   };
 
-  const handleProgramUpdate = async (id: number) => {
+  const handlePackageUpdate = async (id: number) => {
     playClick();
     const data: any = {};
+    if (editName) data.name = editName;
     if (editPrice) data.price = Number(editPrice);
     if (editDuration) data.duration = Number(editDuration) * 60; // dk -> sn
     try {
-      await updateProgram(id, data);
-      setPrograms(await getPrograms());
-      setEditingProgram(null);
+      await updatePackage(id, data);
+      setPackages(await getPackages());
+      setEditingPackage(null);
     } catch (e: any) {
       Alert.alert('Hata', e.message);
     }
+  };
+
+  const handleCreatePackage = async () => {
+    if (!newName || !newPrice || !newDuration) {
+      Alert.alert('Hata', 'Tüm alanları doldurun');
+      return;
+    }
+    playClick();
+    try {
+      await createPackage({
+        name: newName,
+        price: Number(newPrice),
+        duration: Number(newDuration) * 60, // dk -> sn
+      });
+      setPackages(await getPackages());
+      setShowNewForm(false);
+      setNewName('');
+      setNewPrice('');
+      setNewDuration('');
+    } catch (e: any) {
+      Alert.alert('Hata', e.message);
+    }
+  };
+
+  const handleDeletePackage = (id: number, name: string) => {
+    Alert.alert(
+      'Paket Sil',
+      `"${name}" paketini silmek istediğinize emin misiniz?`,
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Sil',
+          style: 'destructive',
+          onPress: async () => {
+            playClick();
+            try {
+              await deletePackage(id);
+              setPackages(await getPackages());
+            } catch (e: any) {
+              Alert.alert('Hata', e.message);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -176,11 +229,56 @@ export default function AdminScreen() {
               </View>
             )}
 
-            {/* Programs */}
-            {tab === 'programs' && (
+            {/* Packages */}
+            {tab === 'packages' && (
               <View>
-                <Text style={styles.heading}>Programlar</Text>
-                {programs.map((p) => (
+                <View style={styles.headingRow}>
+                  <Text style={styles.heading}>Paketler</Text>
+                  <TouchableOpacity
+                    style={[styles.smallBtn, { backgroundColor: '#16a34a' }]}
+                    onPress={() => { playClick(); setShowNewForm(!showNewForm); }}
+                  >
+                    <Text style={styles.smallBtnText}>{showNewForm ? 'İptal' : '+ Paket Ekle'}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {showNewForm && (
+                  <View style={styles.newFormCard}>
+                    <TextInput
+                      style={styles.editInput}
+                      placeholder="Paket adı (ör: 25 Dakika)"
+                      placeholderTextColor="#94a3b8"
+                      value={newName}
+                      onChangeText={setNewName}
+                    />
+                    <View style={styles.editRow}>
+                      <TextInput
+                        style={styles.editInput}
+                        placeholder="Fiyat (TL)"
+                        placeholderTextColor="#94a3b8"
+                        keyboardType="numeric"
+                        value={newPrice}
+                        onChangeText={setNewPrice}
+                      />
+                      <TextInput
+                        style={styles.editInput}
+                        placeholder="Süre (dk)"
+                        placeholderTextColor="#94a3b8"
+                        keyboardType="numeric"
+                        value={newDuration}
+                        onChangeText={setNewDuration}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.smallBtn, { backgroundColor: '#16a34a', alignSelf: 'flex-end', marginTop: 8 }]}
+                      onPress={handleCreatePackage}
+                    >
+                      <Text style={styles.smallBtnText}>Oluştur</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {packages.map((p) => (
                   <View key={p.id} style={styles.listCard}>
                     <View style={styles.listHeader}>
                       <Text style={styles.listTitle}>{p.icon} {p.name}</Text>
@@ -188,43 +286,63 @@ export default function AdminScreen() {
                     </View>
                     <Text style={styles.durationText}>{Math.floor(p.duration / 60)} dk</Text>
 
-                    {editingProgram === p.id ? (
-                      <View style={styles.editRow}>
-                        <TextInput
-                          style={styles.editInput}
-                          placeholder="Fiyat (TL)"
-                          placeholderTextColor="#94a3b8"
-                          keyboardType="numeric"
-                          value={editPrice}
-                          onChangeText={setEditPrice}
-                        />
-                        <TextInput
-                          style={styles.editInput}
-                          placeholder="Sure (dk)"
-                          placeholderTextColor="#94a3b8"
-                          keyboardType="numeric"
-                          value={editDuration}
-                          onChangeText={setEditDuration}
-                        />
-                        <TouchableOpacity
-                          style={[styles.smallBtn, { backgroundColor: '#16a34a' }]}
-                          onPress={() => handleProgramUpdate(p.id)}
-                        >
-                          <Text style={styles.smallBtnText}>Kaydet</Text>
-                        </TouchableOpacity>
+                    {editingPackage === p.id ? (
+                      <View>
+                        <View style={styles.editRow}>
+                          <TextInput
+                            style={styles.editInput}
+                            placeholder="Ad"
+                            placeholderTextColor="#94a3b8"
+                            value={editName}
+                            onChangeText={setEditName}
+                          />
+                        </View>
+                        <View style={styles.editRow}>
+                          <TextInput
+                            style={styles.editInput}
+                            placeholder="Fiyat (TL)"
+                            placeholderTextColor="#94a3b8"
+                            keyboardType="numeric"
+                            value={editPrice}
+                            onChangeText={setEditPrice}
+                          />
+                          <TextInput
+                            style={styles.editInput}
+                            placeholder="Süre (dk)"
+                            placeholderTextColor="#94a3b8"
+                            keyboardType="numeric"
+                            value={editDuration}
+                            onChangeText={setEditDuration}
+                          />
+                          <TouchableOpacity
+                            style={[styles.smallBtn, { backgroundColor: '#16a34a' }]}
+                            onPress={() => handlePackageUpdate(p.id)}
+                          >
+                            <Text style={styles.smallBtnText}>Kaydet</Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     ) : (
-                      <TouchableOpacity
-                        style={[styles.smallBtn, { backgroundColor: '#2563eb', marginTop: 8 }]}
-                        onPress={() => {
-                          playClick();
-                          setEditingProgram(p.id);
-                          setEditPrice(String(p.price));
-                          setEditDuration(String(Math.floor(p.duration / 60)));
-                        }}
-                      >
-                        <Text style={styles.smallBtnText}>Düzenle</Text>
-                      </TouchableOpacity>
+                      <View style={styles.actionRow}>
+                        <TouchableOpacity
+                          style={[styles.smallBtn, { backgroundColor: '#2563eb' }]}
+                          onPress={() => {
+                            playClick();
+                            setEditingPackage(p.id);
+                            setEditName(p.name);
+                            setEditPrice(String(p.price));
+                            setEditDuration(String(Math.floor(p.duration / 60)));
+                          }}
+                        >
+                          <Text style={styles.smallBtnText}>Düzenle</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.smallBtn, { backgroundColor: '#dc2626' }]}
+                          onPress={() => handleDeletePackage(p.id, p.name)}
+                        >
+                          <Text style={styles.smallBtnText}>Sil</Text>
+                        </TouchableOpacity>
+                      </View>
                     )}
                   </View>
                 ))}
@@ -259,7 +377,7 @@ export default function AdminScreen() {
                   tickets.map((t) => (
                     <View key={t.id} style={styles.listCard}>
                       <View style={styles.listHeader}>
-                        <Text style={styles.listTitle}>#{t.id} {t.icon || '🎫'} {t.program_name || ''}</Text>
+                        <Text style={styles.listTitle}>#{t.id} {t.icon || '🎫'} {t.package_name || ''}</Text>
                         <StatusBadge status={t.status} />
                       </View>
                       <Text style={styles.ticketMeta}>
@@ -311,9 +429,9 @@ export default function AdminScreen() {
                   ))
                 )}
 
-                {/* Program Stats */}
-                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Program İstatistikleri</Text>
-                {reports.programStats.map((ps, i) => (
+                {/* Package Stats */}
+                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Paket İstatistikleri</Text>
+                {reports.packageStats.map((ps, i) => (
                   <View key={i} style={styles.reportRow}>
                     <Text style={styles.reportDate}>{ps.name}</Text>
                     <Text style={styles.reportCount}>{ps.count} adet</Text>
@@ -390,6 +508,7 @@ const styles = StyleSheet.create({
   body: { flex: 1 },
   bodyContent: { padding: 16, paddingBottom: 40 },
   heading: { fontSize: 22, fontWeight: '700', color: '#1e293b', marginBottom: 16 },
+  headingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   listCard: {
     backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 10,
@@ -407,6 +526,10 @@ const styles = StyleSheet.create({
   editInput: {
     flex: 1, backgroundColor: '#f8fafc', borderRadius: 8, padding: 10,
     borderWidth: 1, borderColor: '#e2e8f0', fontSize: 14,
+  },
+  newFormCard: {
+    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 16,
+    borderWidth: 1, borderColor: '#e2e8f0',
   },
   filterRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   filterBtn: {

@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator, TextInput, Platform } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import StationGrid from '../components/StationGrid';
-import CountdownTimer from '../components/CountdownTimer';
-import { Station, getStations, verifyTicket, startWash, completeWash, VerifyTicketResponse } from '../lib/api';
+import WashModeSelector from '../components/WashModeSelector';
+import { Station, getStations, verifyTicket, startWash, completeWash, logModeSwitch, VerifyTicketResponse } from '../lib/api';
 import { playClick, playBeep, playSuccess, playError, playComplete } from '../lib/sounds';
 
 type Screen = 'stations' | 'scan' | 'confirm' | 'washing' | 'done';
@@ -17,6 +17,7 @@ export default function KioskScreen() {
   const [manualQR, setManualQR] = useState('');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [activeTicketId, setActiveTicketId] = useState<number | null>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const scanLock = useRef(false);
 
@@ -76,7 +77,8 @@ export default function KioskScreen() {
     playClick();
     setProcessing(true);
     try {
-      await startWash(scannedQR, selectedStation.id);
+      const result = await startWash(scannedQR, selectedStation.id);
+      setActiveTicketId(result.ticket_id);
       setScreen('washing');
       playSuccess();
     } catch (e: any) {
@@ -84,6 +86,13 @@ export default function KioskScreen() {
       Alert.alert('Hata', e.message || 'Yıkama başlatılamadı');
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handleModeSwitch = (mode: 'foam' | 'wash') => {
+    if (activeTicketId && selectedStation) {
+      // Fire-and-forget
+      logModeSwitch(activeTicketId, selectedStation.id, mode).catch(() => {});
     }
   };
 
@@ -103,6 +112,7 @@ export default function KioskScreen() {
     setTicketInfo(null);
     setScannedQR('');
     setManualQR('');
+    setActiveTicketId(null);
     scanLock.current = false;
     loadStations();
   };
@@ -182,10 +192,13 @@ export default function KioskScreen() {
 
           <View style={styles.confirmCard}>
             <Text style={styles.confirmIcon}>{ticketInfo.icon}</Text>
-            <Text style={styles.confirmProgram}>{ticketInfo.program_name}</Text>
-            <Text style={styles.confirmPrice}>{ticketInfo.program_price} TL</Text>
+            <Text style={styles.confirmProgram}>{ticketInfo.package_name}</Text>
+            <Text style={styles.confirmPrice}>{ticketInfo.package_price} TL</Text>
             <Text style={styles.confirmDuration}>Süre: {Math.floor(ticketInfo.duration / 60)} dk</Text>
             <Text style={styles.confirmStation}>📍 {selectedStation?.name}</Text>
+            <View style={styles.modeNote}>
+              <Text style={styles.modeNoteText}>🧼 Köpük ve 🚿 Yıkama modları arasında serbestçe geçiş yapabilirsiniz</Text>
+            </View>
           </View>
 
           <TouchableOpacity
@@ -206,13 +219,13 @@ export default function KioskScreen() {
         </View>
       )}
 
-      {/* Washing countdown */}
+      {/* Washing - Mode Selector */}
       {screen === 'washing' && ticketInfo && (
-        <CountdownTimer
+        <WashModeSelector
           totalSeconds={ticketInfo.duration}
+          onModeSwitch={handleModeSwitch}
           onComplete={handleWashComplete}
-          programName={ticketInfo.program_name}
-          programIcon={ticketInfo.icon}
+          packageName={ticketInfo.package_name}
         />
       )}
 
@@ -277,7 +290,13 @@ const styles = StyleSheet.create({
   confirmProgram: { fontSize: 20, fontWeight: '700', color: '#1e293b', marginBottom: 4 },
   confirmPrice: { fontSize: 24, fontWeight: '700', color: '#2563eb', marginBottom: 4 },
   confirmDuration: { fontSize: 15, color: '#64748b', marginBottom: 8 },
-  confirmStation: { fontSize: 16, fontWeight: '600', color: '#1e293b' },
+  confirmStation: { fontSize: 16, fontWeight: '600', color: '#1e293b', marginBottom: 12 },
+  modeNote: {
+    backgroundColor: '#f0f9ff', borderRadius: 12, padding: 12, width: '100%',
+  },
+  modeNoteText: {
+    fontSize: 13, color: '#0369a1', textAlign: 'center', lineHeight: 18,
+  },
   startBtn: {
     backgroundColor: '#16a34a', paddingHorizontal: 40, paddingVertical: 16,
     borderRadius: 14, width: '100%', alignItems: 'center',

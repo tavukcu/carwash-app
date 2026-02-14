@@ -12,53 +12,54 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-// --- Programs ---
-export interface Program {
+// --- Time Packages ---
+export interface TimePackage {
   id: number;
   name: string;
   price: number;
   duration: number; // seconds
   icon: string;
+  is_active: number;
 }
 
-export function getPrograms() {
-  return request<Program[]>('/wash/programs');
+export function getPackages() {
+  return request<TimePackage[]>('/wash/packages');
 }
 
 // --- Tickets ---
 export interface Ticket {
   id: number;
   qr_code: string;
-  program_id: number;
+  package_id: number;
   status: string;
   payment_method: string;
   amount: number;
   station_id: number | null;
   created_at: string;
   used_at: string | null;
-  program_name?: string;
+  package_name?: string;
   icon?: string;
   station_name?: string;
 }
 
 export interface CreateTicketResponse {
   ticket: Ticket;
-  program: Program;
+  package: TimePackage;
   qrDataUrl: string;
 }
 
-export function createTicket(program_id: number, payment_method: 'cash' | 'card') {
+export function createTicket(package_id: number, payment_method: 'cash' | 'card') {
   return request<CreateTicketResponse>('/tickets', {
     method: 'POST',
-    body: JSON.stringify({ program_id, payment_method }),
+    body: JSON.stringify({ package_id, payment_method }),
   });
 }
 
 export interface VerifyTicketResponse extends Ticket {
-  program_name: string;
+  package_name: string;
   duration: number;
   icon: string;
-  program_price: number;
+  package_price: number;
 }
 
 export function verifyTicket(qrCode: string) {
@@ -76,7 +77,7 @@ export interface Station {
   name: string;
   status: 'idle' | 'active' | 'maintenance';
   current_ticket_id: number | null;
-  program_name?: string;
+  package_name?: string;
 }
 
 export function getStations() {
@@ -93,7 +94,8 @@ export function updateStation(id: number, status: string) {
 // --- Wash ---
 export interface StartWashResponse {
   message: string;
-  program_name: string;
+  ticket_id: number;
+  package_name: string;
   duration: number;
   icon: string;
   station_id: number;
@@ -110,6 +112,13 @@ export function completeWash(station_id: number) {
   return request<{ message: string; station_id: number }>('/wash/complete', {
     method: 'POST',
     body: JSON.stringify({ station_id }),
+  });
+}
+
+export function logModeSwitch(ticket_id: number, station_id: number, mode: 'foam' | 'wash') {
+  return request<{ message: string; mode: string }>('/wash/mode', {
+    method: 'POST',
+    body: JSON.stringify({ ticket_id, station_id, mode }),
   });
 }
 
@@ -133,7 +142,7 @@ export interface ReportRow {
   total_income: number;
 }
 
-export interface ProgramStat {
+export interface PackageStat {
   name: string;
   count: number;
   total: number;
@@ -141,16 +150,29 @@ export interface ProgramStat {
 
 export interface ReportsResponse {
   report: ReportRow[];
-  programStats: ProgramStat[];
+  packageStats: PackageStat[];
 }
 
 export function getReports(period: 'daily' | 'weekly' | 'monthly') {
   return request<ReportsResponse>(`/admin/reports?period=${period}`);
 }
 
-export function updateProgram(id: number, data: Partial<Pick<Program, 'name' | 'price' | 'duration'>>) {
-  return request<Program>(`/admin/programs/${id}`, {
+export function updatePackage(id: number, data: Partial<Pick<TimePackage, 'name' | 'price' | 'duration'>>) {
+  return request<TimePackage>(`/admin/packages/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
+  });
+}
+
+export function createPackage(data: { name: string; price: number; duration: number; icon?: string }) {
+  return request<TimePackage>('/admin/packages', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function deletePackage(id: number) {
+  return request<{ message: string }>(`/admin/packages/${id}`, {
+    method: 'DELETE',
   });
 }

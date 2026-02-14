@@ -17,7 +17,7 @@ export default function HomeScreen() {
         <View style={styles.content}>
           <Text style={styles.logo}>🚗💦</Text>
           <Text style={styles.title}>Self-Servis{'\n'}Araç Yıkama</Text>
-          <Text style={styles.subtitle}>QR Kodlu Dijital Ödeme Sistemi</Text>
+          <Text style={styles.subtitle}>Zamanlı Self-Servis Yıkama Sistemi</Text>
 
           <View style={styles.buttons}>
             {buttons.map((b) => (
