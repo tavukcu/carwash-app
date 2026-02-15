@@ -184,7 +184,7 @@ export default function AdminScreen() {
 
       <ScrollView
         style={styles.body}
-        contentContainerStyle={styles.bodyContent}
+        contentContainerStyle={[styles.bodyContent, tab === 'stations' && { padding: 10, paddingBottom: 10 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={K.accent} />}
       >
         {loading ? (
@@ -208,8 +208,7 @@ export default function AdminScreen() {
 
             {/* Stations - Monitoring Panel */}
             {tab === 'stations' && (
-              <View>
-                <Text style={styles.heading}>Istasyon Takip</Text>
+              <View style={monStyles.fullScreen}>
                 <View style={monStyles.grid}>
                   {stations.map((s) => (
                     <StationCard
@@ -448,6 +447,25 @@ function StatCard({ icon, label, value, color }: { icon: string; label: string; 
   );
 }
 
+// Yıkama / temizlik temalı renkler
+const WASH = {
+  // Boş - temiz mavi / su
+  idleBg: '#e0f2fe',
+  idleBorder: '#38bdf8',
+  idleDot: '#0ea5e9',
+  // Aktif - köpük / aqua
+  activeBg: '#ecfeff',
+  activeBorder: '#06b6d4',
+  activeDot: '#06b6d4',
+  activeTimer: '#0891b2',
+  // Bakım - gri / paslanmaz çelik
+  maintBg: '#f1f5f9',
+  maintBorder: '#94a3b8',
+  maintDot: '#64748b',
+  // Süre azalınca
+  lowTime: '#ef4444',
+};
+
 function StationCard({ station: s, onStatusChange }: { station: Station; onStatusChange: (id: number, status: string) => void }) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -466,9 +484,9 @@ function StationCard({ station: s, onStatusChange }: { station: Station; onStatu
     }
   }, [s.status]);
 
-  const borderColor = s.status === 'active' ? K.yellow : s.status === 'maintenance' ? K.red : K.green;
-  const bgColor = s.status === 'active' ? K.yellowBg : s.status === 'maintenance' ? K.redBg : K.greenBg;
-  const statusIcon = s.status === 'active' ? '🔄' : s.status === 'maintenance' ? '🔧' : '✅';
+  const borderColor = s.status === 'active' ? WASH.activeBorder : s.status === 'maintenance' ? WASH.maintBorder : WASH.idleBorder;
+  const bgColor = s.status === 'active' ? WASH.activeBg : s.status === 'maintenance' ? WASH.maintBg : WASH.idleBg;
+  const dotColor = s.status === 'active' ? WASH.activeDot : s.status === 'maintenance' ? WASH.maintDot : WASH.idleDot;
 
   // Kalan süre hesapla
   let remainingSec = 0;
@@ -481,48 +499,35 @@ function StationCard({ station: s, onStatusChange }: { station: Station; onStatu
 
   return (
     <View style={[monStyles.card, { borderColor, backgroundColor: bgColor }]}>
-      {/* Üst kısım - durum ışığı + isim */}
+      {/* Üst - isim + durum noktası */}
       <View style={monStyles.cardTop}>
-        <Animated.View style={[monStyles.statusDot, { backgroundColor: borderColor, opacity: s.status === 'idle' ? pulseAnim : 1 }]} />
-        <Text style={monStyles.stationName}>{s.name}</Text>
-        <Text style={monStyles.statusIcon}>{statusIcon}</Text>
+        <Animated.View style={[monStyles.statusDot, { backgroundColor: dotColor, opacity: s.status === 'idle' ? pulseAnim : 1 }]} />
+        <Text style={monStyles.stationName} numberOfLines={1}>{s.name}</Text>
       </View>
 
-      {/* Orta kısım - aktif bilgiler veya durum mesajı */}
+      {/* Orta - bilgi */}
       {s.status === 'active' && s.start_time && s.total_duration ? (
         <View style={monStyles.activeInfo}>
-          <Text style={monStyles.packageIcon}>{s.icon || '🚿'}</Text>
-          <Text style={monStyles.packageName}>{s.package_name}</Text>
-          {s.price != null && <Text style={monStyles.packagePrice}>{s.price} TL</Text>}
+          <Text style={monStyles.packageName}>{s.icon || '🚿'} {s.package_name}</Text>
           <CountdownTimer remaining={remainingSec} total={totalSec} />
         </View>
       ) : (
         <View style={monStyles.idleInfo}>
-          <Text style={monStyles.idleIcon}>
-            {s.status === 'maintenance' ? '🔧' : '🚿'}
-          </Text>
-          <Text style={monStyles.idleText}>
-            {s.status === 'maintenance' ? 'Bakimda' : 'Musteri Bekleniyor'}
-          </Text>
+          <Text style={monStyles.idleIcon}>{s.status === 'maintenance' ? '🔧' : '💧'}</Text>
+          <Text style={monStyles.idleText}>{s.status === 'maintenance' ? 'Bakimda' : 'Hazir'}</Text>
         </View>
       )}
 
-      {/* Alt kısım - butonlar */}
+      {/* Alt - butonlar */}
       <View style={monStyles.cardActions}>
         {s.status !== 'idle' && (
-          <TouchableOpacity
-            style={[monStyles.actionBtn, { backgroundColor: K.green }]}
-            onPress={() => onStatusChange(s.id, 'idle')}
-          >
-            <Text style={monStyles.actionBtnText}>✅ Bos</Text>
+          <TouchableOpacity style={[monStyles.actionBtn, { backgroundColor: WASH.idleDot }]} onPress={() => onStatusChange(s.id, 'idle')}>
+            <Text style={monStyles.actionBtnText}>Bos</Text>
           </TouchableOpacity>
         )}
         {s.status !== 'maintenance' && (
-          <TouchableOpacity
-            style={[monStyles.actionBtn, { backgroundColor: K.red }]}
-            onPress={() => onStatusChange(s.id, 'maintenance')}
-          >
-            <Text style={monStyles.actionBtnText}>🔧 Bakim</Text>
+          <TouchableOpacity style={[monStyles.actionBtn, { backgroundColor: WASH.maintDot }]} onPress={() => onStatusChange(s.id, 'maintenance')}>
+            <Text style={monStyles.actionBtnText}>Bakim</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -550,11 +555,11 @@ function CountdownTimer({ remaining, total }: { remaining: number; total: number
 
   return (
     <View style={monStyles.timerWrap}>
-      <Text style={[monStyles.timerText, isLow && { color: K.red }]}>
+      <Text style={[monStyles.timerText, isLow && { color: WASH.lowTime }]}>
         {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
       </Text>
       <View style={monStyles.progressBg}>
-        <View style={[monStyles.progressFill, { width: `${progress * 100}%`, backgroundColor: isLow ? K.red : K.yellow }]} />
+        <View style={[monStyles.progressFill, { width: `${progress * 100}%`, backgroundColor: isLow ? WASH.lowTime : WASH.activeBorder }]} />
       </View>
     </View>
   );
@@ -669,110 +674,99 @@ const styles = StyleSheet.create({
 });
 
 const monStyles = StyleSheet.create({
+  fullScreen: {
+    flex: 1,
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 14,
+    gap: 8,
   },
   card: {
-    width: '100%',
-    borderRadius: K.radius,
+    width: '48%',
+    borderRadius: 16,
     borderWidth: 2,
-    padding: 20,
-    marginBottom: 4,
+    padding: 10,
+    justifyContent: 'space-between',
+    minHeight: 130,
   },
   cardTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
+    gap: 6,
   },
   statusDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   stationName: {
-    fontSize: K.fontLg,
+    fontSize: 16,
     fontWeight: '800',
     color: K.text,
     flex: 1,
   },
-  statusIcon: {
-    fontSize: 28,
-  },
   activeInfo: {
     alignItems: 'center',
-    paddingVertical: 12,
-  },
-  packageIcon: {
-    fontSize: 48,
-    marginBottom: 8,
+    flex: 1,
+    justifyContent: 'center',
+    paddingVertical: 4,
   },
   packageName: {
-    fontSize: K.fontMd,
+    fontSize: 13,
     fontWeight: '700',
     color: K.text,
     marginBottom: 4,
   },
-  packagePrice: {
-    fontSize: K.fontSm,
-    fontWeight: '700',
-    color: K.accent,
-    marginBottom: 12,
-  },
   timerWrap: {
     alignItems: 'center',
     width: '100%',
-    marginTop: 8,
   },
   timerText: {
-    fontSize: 42,
+    fontSize: 24,
     fontWeight: '900',
-    color: K.yellow,
+    color: WASH.activeTimer,
     fontVariant: ['tabular-nums'],
-    marginBottom: 10,
+    marginBottom: 4,
   },
   progressBg: {
     width: '100%',
-    height: 10,
+    height: 5,
     backgroundColor: 'rgba(0,0,0,0.08)',
-    borderRadius: 5,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 5,
+    borderRadius: 3,
   },
   idleInfo: {
     alignItems: 'center',
-    paddingVertical: 24,
+    flex: 1,
+    justifyContent: 'center',
   },
   idleIcon: {
-    fontSize: 56,
-    marginBottom: 8,
+    fontSize: 30,
+    marginBottom: 4,
   },
   idleText: {
-    fontSize: K.fontMd,
+    fontSize: 13,
     fontWeight: '600',
     color: K.textMuted,
   },
   cardActions: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 16,
-    justifyContent: 'center',
+    gap: 4,
   },
   actionBtn: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
     alignItems: 'center',
   },
   actionBtnText: {
     color: '#fff',
-    fontSize: K.fontSm,
+    fontSize: 12,
     fontWeight: '700',
   },
 });
