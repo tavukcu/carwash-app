@@ -78,6 +78,10 @@ export interface Station {
   status: 'idle' | 'active' | 'maintenance';
   current_ticket_id: number | null;
   package_name?: string;
+  start_time?: string | null;
+  total_duration?: number | null;
+  price?: number | null;
+  icon?: string | null;
 }
 
 export function getStations() {
@@ -115,10 +119,10 @@ export function completeWash(station_id: number) {
   });
 }
 
-export function logModeSwitch(ticket_id: number, station_id: number, mode: 'foam' | 'wash') {
-  return request<{ message: string; mode: string }>('/wash/mode', {
+export function logModeSwitch(ticket_id: number, station_id: number, mode: 'foam' | 'wash', action: 'on' | 'off') {
+  return request<{ message: string; mode: string; action: string }>('/wash/mode', {
     method: 'POST',
-    body: JSON.stringify({ ticket_id, station_id, mode }),
+    body: JSON.stringify({ ticket_id, station_id, mode, action }),
   });
 }
 

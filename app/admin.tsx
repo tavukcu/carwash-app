@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   ActivityIndicator, Alert, TextInput, RefreshControl, Platform,
+  Animated,
 } from 'react-native';
 import {
   DashboardData, Station, TimePackage, Ticket, ReportsResponse,
@@ -42,8 +43,8 @@ export default function AdminScreen() {
   const [reportPeriod, setReportPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [loading, setLoading] = useState(true);
 
-  const loadTab = useCallback(async () => {
-    setLoading(true);
+  const loadTab = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       switch (tab) {
         case 'dashboard':
@@ -63,15 +64,22 @@ export default function AdminScreen() {
           break;
       }
     } catch (e: any) {
-      Alert.alert('Hata', e.message);
+      if (!silent) Alert.alert('Hata', e.message);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [tab, ticketFilter, reportPeriod]);
 
   useEffect(() => {
     loadTab();
   }, [loadTab]);
+
+  // Stations polling - 5 saniyede bir sessiz yenileme
+  useEffect(() => {
+    if (tab !== 'stations') return;
+    const interval = setInterval(() => loadTab(true), 5000);
+    return () => clearInterval(interval);
+  }, [tab, loadTab]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -198,32 +206,19 @@ export default function AdminScreen() {
               </View>
             )}
 
-            {/* Stations */}
+            {/* Stations - Monitoring Panel */}
             {tab === 'stations' && (
               <View>
-                <Text style={styles.heading}>Istasyonlar</Text>
-                {stations.map((s) => (
-                  <View key={s.id} style={styles.listCard}>
-                    <View style={styles.listHeader}>
-                      <Text style={styles.listTitle}>🚿 {s.name}</Text>
-                      <StatusBadge status={s.status} />
-                    </View>
-                    <View style={styles.actionRow}>
-                      <TouchableOpacity
-                        style={[styles.smallBtn, { backgroundColor: '#16a34a' }]}
-                        onPress={() => handleStationStatus(s.id, 'idle')}
-                      >
-                        <Text style={styles.smallBtnText}>Bos</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.smallBtn, { backgroundColor: '#dc2626' }]}
-                        onPress={() => handleStationStatus(s.id, 'maintenance')}
-                      >
-                        <Text style={styles.smallBtnText}>Bakimda</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                ))}
+                <Text style={styles.heading}>Istasyon Takip</Text>
+                <View style={monStyles.grid}>
+                  {stations.map((s) => (
+                    <StationCard
+                      key={s.id}
+                      station={s}
+                      onStatusChange={handleStationStatus}
+                    />
+                  ))}
+                </View>
               </View>
             )}
 
@@ -453,6 +448,118 @@ function StatCard({ icon, label, value, color }: { icon: string; label: string; 
   );
 }
 
+function StationCard({ station: s, onStatusChange }: { station: Station; onStatusChange: (id: number, status: string) => void }) {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (s.status === 'idle') {
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 0.4, duration: 1500, useNativeDriver: false }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: false }),
+        ])
+      );
+      loop.start();
+      return () => loop.stop();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [s.status]);
+
+  const borderColor = s.status === 'active' ? K.yellow : s.status === 'maintenance' ? K.red : K.green;
+  const bgColor = s.status === 'active' ? K.yellowBg : s.status === 'maintenance' ? K.redBg : K.greenBg;
+  const statusIcon = s.status === 'active' ? '🔄' : s.status === 'maintenance' ? '🔧' : '✅';
+
+  // Kalan süre hesapla
+  let remainingSec = 0;
+  let totalSec = 0;
+  if (s.status === 'active' && s.start_time && s.total_duration) {
+    totalSec = s.total_duration;
+    const elapsed = Math.floor((Date.now() - new Date(s.start_time).getTime()) / 1000);
+    remainingSec = Math.max(0, totalSec - elapsed);
+  }
+
+  return (
+    <View style={[monStyles.card, { borderColor, backgroundColor: bgColor }]}>
+      {/* Üst kısım - durum ışığı + isim */}
+      <View style={monStyles.cardTop}>
+        <Animated.View style={[monStyles.statusDot, { backgroundColor: borderColor, opacity: s.status === 'idle' ? pulseAnim : 1 }]} />
+        <Text style={monStyles.stationName}>{s.name}</Text>
+        <Text style={monStyles.statusIcon}>{statusIcon}</Text>
+      </View>
+
+      {/* Orta kısım - aktif bilgiler veya durum mesajı */}
+      {s.status === 'active' && s.start_time && s.total_duration ? (
+        <View style={monStyles.activeInfo}>
+          <Text style={monStyles.packageIcon}>{s.icon || '🚿'}</Text>
+          <Text style={monStyles.packageName}>{s.package_name}</Text>
+          {s.price != null && <Text style={monStyles.packagePrice}>{s.price} TL</Text>}
+          <CountdownTimer remaining={remainingSec} total={totalSec} />
+        </View>
+      ) : (
+        <View style={monStyles.idleInfo}>
+          <Text style={monStyles.idleIcon}>
+            {s.status === 'maintenance' ? '🔧' : '🚿'}
+          </Text>
+          <Text style={monStyles.idleText}>
+            {s.status === 'maintenance' ? 'Bakimda' : 'Musteri Bekleniyor'}
+          </Text>
+        </View>
+      )}
+
+      {/* Alt kısım - butonlar */}
+      <View style={monStyles.cardActions}>
+        {s.status !== 'idle' && (
+          <TouchableOpacity
+            style={[monStyles.actionBtn, { backgroundColor: K.green }]}
+            onPress={() => onStatusChange(s.id, 'idle')}
+          >
+            <Text style={monStyles.actionBtnText}>✅ Bos</Text>
+          </TouchableOpacity>
+        )}
+        {s.status !== 'maintenance' && (
+          <TouchableOpacity
+            style={[monStyles.actionBtn, { backgroundColor: K.red }]}
+            onPress={() => onStatusChange(s.id, 'maintenance')}
+          >
+            <Text style={monStyles.actionBtnText}>🔧 Bakim</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+}
+
+function CountdownTimer({ remaining, total }: { remaining: number; total: number }) {
+  const [sec, setSec] = useState(remaining);
+
+  useEffect(() => {
+    setSec(remaining);
+  }, [remaining]);
+
+  useEffect(() => {
+    if (sec <= 0) return;
+    const t = setTimeout(() => setSec((p) => Math.max(0, p - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [sec]);
+
+  const mins = Math.floor(sec / 60);
+  const secs = sec % 60;
+  const progress = total > 0 ? (total - sec) / total : 0;
+  const isLow = sec < 60;
+
+  return (
+    <View style={monStyles.timerWrap}>
+      <Text style={[monStyles.timerText, isLow && { color: K.red }]}>
+        {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
+      </Text>
+      <View style={monStyles.progressBg}>
+        <View style={[monStyles.progressFill, { width: `${progress * 100}%`, backgroundColor: isLow ? K.red : K.yellow }]} />
+      </View>
+    </View>
+  );
+}
+
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; border: string; text: string; label: string }> = {
     idle: { bg: K.greenBg, border: K.greenBorder, text: K.green, label: 'Bos' },
@@ -559,4 +666,113 @@ const styles = StyleSheet.create({
   reportDate: { fontSize: K.fontSm, color: K.text, flex: 1 },
   reportCount: { fontSize: K.fontSm, color: K.textSecondary, marginRight: 14 },
   reportIncome: { fontSize: K.fontMd, fontWeight: '800', color: K.accent },
+});
+
+const monStyles = StyleSheet.create({
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 14,
+  },
+  card: {
+    width: '100%',
+    borderRadius: K.radius,
+    borderWidth: 2,
+    padding: 20,
+    marginBottom: 4,
+  },
+  cardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  statusDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+  },
+  stationName: {
+    fontSize: K.fontLg,
+    fontWeight: '800',
+    color: K.text,
+    flex: 1,
+  },
+  statusIcon: {
+    fontSize: 28,
+  },
+  activeInfo: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  packageIcon: {
+    fontSize: 48,
+    marginBottom: 8,
+  },
+  packageName: {
+    fontSize: K.fontMd,
+    fontWeight: '700',
+    color: K.text,
+    marginBottom: 4,
+  },
+  packagePrice: {
+    fontSize: K.fontSm,
+    fontWeight: '700',
+    color: K.accent,
+    marginBottom: 12,
+  },
+  timerWrap: {
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 8,
+  },
+  timerText: {
+    fontSize: 42,
+    fontWeight: '900',
+    color: K.yellow,
+    fontVariant: ['tabular-nums'],
+    marginBottom: 10,
+  },
+  progressBg: {
+    width: '100%',
+    height: 10,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
+  idleInfo: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  idleIcon: {
+    fontSize: 56,
+    marginBottom: 8,
+  },
+  idleText: {
+    fontSize: K.fontMd,
+    fontWeight: '600',
+    color: K.textMuted,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16,
+    justifyContent: 'center',
+  },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  actionBtnText: {
+    color: '#fff',
+    fontSize: K.fontSm,
+    fontWeight: '700',
+  },
 });

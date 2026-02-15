@@ -15,17 +15,23 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.halildincer.carwash",
       "infoPlist": {
         "NSCameraUsageDescription": "QR kod okumak için kamera erişimi gerekli."
       }
     },
     "android": {
+      "package": "com.halildincer.carwash",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1e3a5f"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,6 +44,13 @@
           "cameraPermission": "QR kod okumak için kamera erişimi gerekli."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "07add0fc-eb35-4ea5-9182-9f9b5dad6043"
+      }
+    },
+    "owner": "halildincer"
   }
 }
