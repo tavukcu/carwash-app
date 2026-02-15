@@ -5,7 +5,7 @@ import {
   Animated,
 } from 'react-native';
 import {
-  DashboardData, Station, TimePackage, Ticket, ReportsResponse,
+  DashboardData, Station, TimePackage, Ticket, ReportsResponse, TicketsResponse,
   getDashboard, getStations, getPackages, getTickets,
   updateStation, updatePackage, createPackage, deletePackage, getReports,
   completeWash,
@@ -39,6 +39,8 @@ export default function AdminScreen() {
   const [newPrice, setNewPrice] = useState('');
   const [newDuration, setNewDuration] = useState('');
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [ticketTotal, setTicketTotal] = useState(0);
+  const [ticketOffset, setTicketOffset] = useState(0);
   const [ticketFilter, setTicketFilter] = useState<string>('');
   const [reports, setReports] = useState<ReportsResponse | null>(null);
   const [reportPeriod, setReportPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
@@ -57,9 +59,12 @@ export default function AdminScreen() {
         case 'packages':
           setPackages(await getPackages());
           break;
-        case 'tickets':
-          setTickets(await getTickets(ticketFilter || undefined));
+        case 'tickets': {
+          const res = await getTickets(ticketFilter || undefined, ticketOffset);
+          setTickets(res.tickets);
+          setTicketTotal(res.total);
           break;
+        }
         case 'reports':
           setReports(await getReports(reportPeriod));
           break;
@@ -69,7 +74,7 @@ export default function AdminScreen() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [tab, ticketFilter, reportPeriod]);
+  }, [tab, ticketFilter, ticketOffset, reportPeriod]);
 
   useEffect(() => {
     loadTab();
@@ -126,6 +131,14 @@ export default function AdminScreen() {
   const handleCreatePackage = async () => {
     if (!newName || !newPrice || !newDuration) {
       Alert.alert('Hata', 'Tum alanlari doldurun');
+      return;
+    }
+    if (Number(newPrice) <= 0 || isNaN(Number(newPrice))) {
+      Alert.alert('Hata', 'Fiyat sifirdan buyuk olmali');
+      return;
+    }
+    if (Number(newDuration) <= 0 || isNaN(Number(newDuration))) {
+      Alert.alert('Hata', 'Sure sifirdan buyuk olmali');
       return;
     }
     playClick();
@@ -366,7 +379,7 @@ export default function AdminScreen() {
                     <TouchableOpacity
                       key={f.key}
                       style={[styles.filterBtn, ticketFilter === f.key && styles.filterActive]}
-                      onPress={() => { playClick(); setTicketFilter(f.key); }}
+                      onPress={() => { playClick(); setTicketOffset(0); setTicketFilter(f.key); }}
                     >
                       <Text style={[styles.filterText, ticketFilter === f.key && styles.filterTextActive]}>
                         {f.label}
@@ -378,21 +391,44 @@ export default function AdminScreen() {
                 {tickets.length === 0 ? (
                   <Text style={styles.emptyText}>Bilet bulunamadi</Text>
                 ) : (
-                  tickets.map((t) => (
-                    <View key={t.id} style={styles.listCard}>
-                      <View style={styles.listHeader}>
-                        <Text style={styles.listTitle}>#{t.id} {t.icon || '🎫'} {t.package_name || ''}</Text>
-                        <StatusBadge status={t.status} />
+                  <>
+                    {tickets.map((t) => (
+                      <View key={t.id} style={styles.listCard}>
+                        <View style={styles.listHeader}>
+                          <Text style={styles.listTitle}>#{t.id} {t.icon || '🎫'} {t.package_name || ''}</Text>
+                          <StatusBadge status={t.status} />
+                        </View>
+                        <Text style={styles.ticketMeta}>
+                          {t.amount} TL • {t.payment_method === 'cash' ? 'Nakit' : 'Kart'}
+                          {t.station_name ? ` • ${t.station_name}` : ''}
+                        </Text>
+                        <Text style={styles.ticketDate}>
+                          {new Date(t.created_at).toLocaleString('tr-TR')}
+                        </Text>
                       </View>
-                      <Text style={styles.ticketMeta}>
-                        {t.amount} TL • {t.payment_method === 'cash' ? 'Nakit' : 'Kart'}
-                        {t.station_name ? ` • ${t.station_name}` : ''}
-                      </Text>
-                      <Text style={styles.ticketDate}>
-                        {new Date(t.created_at).toLocaleString('tr-TR')}
-                      </Text>
-                    </View>
-                  ))
+                    ))}
+                    {ticketTotal > 50 && (
+                      <View style={styles.paginationRow}>
+                        <TouchableOpacity
+                          style={[styles.smallBtn, { backgroundColor: ticketOffset > 0 ? K.accent : K.border }]}
+                          disabled={ticketOffset === 0}
+                          onPress={() => { playClick(); setTicketOffset(Math.max(0, ticketOffset - 50)); }}
+                        >
+                          <Text style={styles.smallBtnText}>Onceki</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.paginationText}>
+                          {ticketOffset + 1}-{Math.min(ticketOffset + 50, ticketTotal)} / {ticketTotal}
+                        </Text>
+                        <TouchableOpacity
+                          style={[styles.smallBtn, { backgroundColor: ticketOffset + 50 < ticketTotal ? K.accent : K.border }]}
+                          disabled={ticketOffset + 50 >= ticketTotal}
+                          onPress={() => { playClick(); setTicketOffset(ticketOffset + 50); }}
+                        >
+                          <Text style={styles.smallBtnText}>Sonraki</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </>
                 )}
               </View>
             )}
@@ -688,6 +724,8 @@ const styles = StyleSheet.create({
     backgroundColor: K.bgCard, borderRadius: 10, padding: 14, marginBottom: 8,
     borderWidth: 1, borderColor: K.border,
   },
+  paginationRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, gap: 10 },
+  paginationText: { fontSize: K.fontSm, color: K.textSecondary, fontWeight: '600' },
   reportDate: { fontSize: K.fontSm, color: K.text, flex: 1 },
   reportCount: { fontSize: K.fontSm, color: K.textSecondary, marginRight: 14 },
   reportIncome: { fontSize: K.fontMd, fontWeight: '800', color: K.accent },

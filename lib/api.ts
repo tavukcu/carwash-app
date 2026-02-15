@@ -1,4 +1,4 @@
-const BASE_URL = 'https://carwash-neyisek.vercel.app/api';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://carwash-neyisek.vercel.app/api';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -66,9 +66,19 @@ export function verifyTicket(qrCode: string) {
   return request<VerifyTicketResponse>(`/tickets/verify/${qrCode}`);
 }
 
-export function getTickets(status?: string) {
-  const q = status ? `?status=${status}` : '';
-  return request<Ticket[]>(`/tickets${q}`);
+export interface TicketsResponse {
+  tickets: Ticket[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export function getTickets(status?: string, offset = 0, limit = 50) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  params.set('offset', String(offset));
+  params.set('limit', String(limit));
+  return request<TicketsResponse>(`/tickets?${params}`);
 }
 
 // --- Stations ---
