@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { TimePackage } from '../lib/api';
 import { playClick } from '../lib/sounds';
+import { K } from '../lib/theme';
 
 interface Props {
   packages: TimePackage[];
@@ -11,21 +12,24 @@ interface Props {
 export default function PackageGrid({ packages, selectedId, onSelect }: Props) {
   return (
     <View style={styles.grid}>
-      {packages.map((p) => (
-        <TouchableOpacity
-          key={p.id}
-          style={[styles.card, selectedId === p.id && styles.selected]}
-          onPress={() => { playClick(); onSelect(p); }}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.icon}>{p.icon}</Text>
-          <Text style={[styles.name, selectedId === p.id && styles.selectedText]}>{p.name}</Text>
-          <Text style={[styles.price, selectedId === p.id && styles.selectedText]}>{p.price} TL</Text>
-          <Text style={[styles.duration, selectedId === p.id && styles.selectedDuration]}>
-            {Math.floor(p.duration / 60)} dk
-          </Text>
-        </TouchableOpacity>
-      ))}
+      {packages.map((p) => {
+        const selected = selectedId === p.id;
+        return (
+          <TouchableOpacity
+            key={p.id}
+            style={[styles.card, selected && styles.selected]}
+            onPress={() => { playClick(); onSelect(p); }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.icon}>{p.icon}</Text>
+            <Text style={[styles.name, selected && styles.selectedText]}>{p.name}</Text>
+            <Text style={[styles.price, selected && styles.selectedText]}>{p.price} TL</Text>
+            <Text style={[styles.duration, selected && styles.selectedDuration]}>
+              {Math.floor(p.duration / 60)} dk
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -35,51 +39,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 16,
   },
   card: {
     width: '47%',
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: K.bgCard,
+    borderRadius: K.radius,
+    padding: 20,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#e2e8f0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    borderColor: K.border,
+    minHeight: K.btnHeight,
   },
   selected: {
-    borderColor: '#2563eb',
-    backgroundColor: '#2563eb',
+    borderColor: K.accent,
+    backgroundColor: K.accentGlow,
   },
   icon: {
-    fontSize: 36,
-    marginBottom: 8,
+    fontSize: K.iconSize,
+    marginBottom: 10,
   },
   name: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1e293b',
+    fontSize: K.fontMd,
+    fontWeight: '700',
+    color: K.text,
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   selectedText: {
-    color: '#fff',
+    color: K.accent,
   },
   price: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#2563eb',
-    marginBottom: 2,
+    fontSize: K.fontLg,
+    fontWeight: '800',
+    color: K.accent,
+    marginBottom: 4,
   },
   duration: {
-    fontSize: 12,
-    color: '#64748b',
+    fontSize: K.fontSm,
+    color: K.textSecondary,
   },
   selectedDuration: {
-    color: 'rgba(255,255,255,0.8)',
+    color: K.accent,
   },
 });

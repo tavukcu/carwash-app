@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, Platform } from 'react-native';
+import { K } from '../lib/theme';
 
 interface Props {
   icon: string;
@@ -22,27 +23,29 @@ export default function PageHeader({ icon, title, subtitle }: Props) {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: '#1e3a5f',
-    paddingTop: Platform.OS === 'web' ? 16 : 56,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
+    backgroundColor: K.bgHeader,
+    paddingTop: Platform.OS === 'web' ? 20 : 56,
+    paddingBottom: 20,
+    paddingHorizontal: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: K.accentBorder,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
   },
   icon: {
-    fontSize: 28,
+    fontSize: K.iconSize,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: K.fontXl,
+    fontWeight: '800',
+    color: K.text,
   },
   subtitle: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    fontSize: K.fontSm,
+    color: K.accent,
     marginTop: 2,
   },
 });

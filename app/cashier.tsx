@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import PackageGrid from '../components/PackageGrid';
 import PageHeader from '../components/PageHeader';
 import { TimePackage, getPackages, createTicket, CreateTicketResponse } from '../lib/api';
 import { playClick, playSuccess, playError } from '../lib/sounds';
+import { K } from '../lib/theme';
 
 type Step = 'package' | 'payment' | 'ticket';
 
@@ -19,7 +20,7 @@ export default function CashierScreen() {
   useEffect(() => {
     getPackages()
       .then(setPackages)
-      .catch(() => Alert.alert('Hata', 'Paketler yüklenemedi'))
+      .catch(() => Alert.alert('Hata', 'Paketler yuklenemedi'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -39,9 +40,15 @@ export default function CashierScreen() {
       playSuccess();
     } catch (e: any) {
       playError();
-      Alert.alert('Hata', e.message || 'Bilet oluşturulamadı');
+      Alert.alert('Hata', e.message || 'Bilet olusturulamadi');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handlePrint = () => {
+    if (Platform.OS === 'web') {
+      window.print();
     }
   };
 
@@ -55,18 +62,18 @@ export default function CashierScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color={K.accent} />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f1f5f9' }}>
-    <PageHeader icon="💰" title="Kasa" subtitle="Bilet oluştur" />
+    <View style={{ flex: 1, backgroundColor: K.bg }}>
+    <PageHeader icon="💰" title="Kasa" subtitle="Bilet olustur" />
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Steps indicator */}
       <View style={styles.steps}>
-        {['Paket', 'Ödeme', 'Bilet'].map((label, i) => {
+        {['Paket', 'Odeme', 'Bilet'].map((label, i) => {
           const stepIndex = ['package', 'payment', 'ticket'].indexOf(step);
           return (
             <View key={label} style={styles.stepRow}>
@@ -82,7 +89,7 @@ export default function CashierScreen() {
 
       {step === 'package' && (
         <View>
-          <Text style={styles.heading}>Süre Paketi Seçin</Text>
+          <Text style={styles.heading}>Sure Paketi Secin</Text>
           <PackageGrid
             packages={packages}
             selectedId={null}
@@ -93,7 +100,7 @@ export default function CashierScreen() {
 
       {step === 'payment' && selectedPackage && (
         <View>
-          <Text style={styles.heading}>Ödeme Yöntemi</Text>
+          <Text style={styles.heading}>Odeme Yontemi</Text>
           <View style={styles.selectedCard}>
             <Text style={styles.selectedIcon}>{selectedPackage.icon}</Text>
             <View>
@@ -121,7 +128,7 @@ export default function CashierScreen() {
             </TouchableOpacity>
           </View>
 
-          {creating && <ActivityIndicator style={{ marginTop: 16 }} color="#2563eb" />}
+          {creating && <ActivityIndicator style={{ marginTop: 20 }} color={K.accent} />}
 
           <TouchableOpacity style={styles.backBtn} onPress={() => { playClick(); setStep('package'); }}>
             <Text style={styles.backText}>← Geri</Text>
@@ -132,10 +139,10 @@ export default function CashierScreen() {
       {step === 'ticket' && ticketData && (
         <View style={styles.ticketContainer}>
           <Text style={styles.successIcon}>✅</Text>
-          <Text style={styles.successText}>Bilet Oluşturuldu!</Text>
+          <Text style={styles.successText}>Bilet Olusturuldu!</Text>
 
           <View style={styles.qrCard}>
-            <QRCode value={ticketData.ticket.qr_code} size={200} />
+            <QRCode value={ticketData.ticket.qr_code} size={220} backgroundColor="#fff" color="#000" />
           </View>
 
           <Text style={styles.ticketId}>Bilet #{ticketData.ticket.id}</Text>
@@ -144,68 +151,136 @@ export default function CashierScreen() {
           </Text>
           <Text style={styles.ticketHint}>QR kodu kiosk ekraninda okutun</Text>
 
-          <TouchableOpacity style={styles.newTicketBtn} onPress={reset}>
-            <Text style={styles.newTicketText}>Yeni Bilet</Text>
-          </TouchableOpacity>
+          <View style={styles.ticketActions}>
+            {Platform.OS === 'web' && (
+              <TouchableOpacity style={styles.printBtn} onPress={handlePrint}>
+                <Text style={styles.printIcon}>🖨️</Text>
+                <Text style={styles.printText}>Fis Yazdir</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity style={styles.newTicketBtn} onPress={reset}>
+              <Text style={styles.newTicketText}>Yeni Bilet</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
     </ScrollView>
+
+    {/* Hidden printable receipt - only visible when printing */}
+    {step === 'ticket' && ticketData && Platform.OS === 'web' && (
+      <PrintableReceipt ticket={ticketData} />
+    )}
     </View>
   );
 }
 
+function PrintableReceipt({ ticket }: { ticket: CreateTicketResponse }) {
+  const now = new Date().toLocaleString('tr-TR');
+  return (
+    // @ts-ignore
+    <div className="print-only receipt" style={{ display: 'none' }}>
+      {/* @ts-ignore */}
+      <div className="receipt-center receipt-bold receipt-lg">SELF-SERVIS ARAC YIKAMA</div>
+      {/* @ts-ignore */}
+      <div className="receipt-center">Zamanli Yikama Sistemi</div>
+      {/* @ts-ignore */}
+      <div className="receipt-line" />
+      {/* @ts-ignore */}
+      <div>Bilet No: #{ticket.ticket.id}</div>
+      {/* @ts-ignore */}
+      <div>Paket: {ticket.package.name}</div>
+      {/* @ts-ignore */}
+      <div>Sure: {Math.floor(ticket.package.duration / 60)} dk</div>
+      {/* @ts-ignore */}
+      <div>Tutar: {ticket.package.price} TL</div>
+      {/* @ts-ignore */}
+      <div>Odeme: {ticket.ticket.payment_method === 'cash' ? 'Nakit' : 'Kart'}</div>
+      {/* @ts-ignore */}
+      <div>Tarih: {now}</div>
+      {/* @ts-ignore */}
+      <div className="receipt-line" />
+      {/* @ts-ignore */}
+      <div className="receipt-qr">
+        {/* @ts-ignore */}
+        <img
+          src={ticket.qrDataUrl}
+          alt="QR"
+          style={{ width: '50mm', height: '50mm' }}
+        />
+      </div>
+      {/* @ts-ignore */}
+      <div className="receipt-center">QR kodu kiosk ekraninda okutunuz</div>
+      {/* @ts-ignore */}
+      <div className="receipt-line" />
+      {/* @ts-ignore */}
+      <div className="receipt-center">Iyi yikamalar!</div>
+    </div>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f1f5f9' },
-  content: { padding: 20, paddingBottom: 40 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  steps: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+  container: { flex: 1, backgroundColor: K.bg },
+  content: { padding: 24, paddingBottom: 40 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: K.bg },
+  steps: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 28 },
   stepRow: { flexDirection: 'row', alignItems: 'center' },
   stepCircle: {
-    width: 28, height: 28, borderRadius: 14,
-    backgroundColor: '#e2e8f0', justifyContent: 'center', alignItems: 'center',
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: K.bgCard, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 2, borderColor: K.border,
   },
-  stepActive: { backgroundColor: '#2563eb' },
-  stepNum: { fontSize: 13, fontWeight: '700', color: '#94a3b8' },
+  stepActive: { backgroundColor: K.accent, borderColor: K.accent },
+  stepNum: { fontSize: K.fontSm, fontWeight: '800', color: K.textMuted },
   stepNumActive: { color: '#fff' },
-  stepLabel: { fontSize: 12, color: '#94a3b8', marginLeft: 4 },
-  stepLabelActive: { color: '#2563eb', fontWeight: '600' },
-  stepLine: { width: 24, height: 2, backgroundColor: '#e2e8f0', marginHorizontal: 4 },
-  stepLineActive: { backgroundColor: '#2563eb' },
-  heading: { fontSize: 22, fontWeight: '700', color: '#1e293b', marginBottom: 16 },
+  stepLabel: { fontSize: K.fontSm, color: K.textMuted, marginLeft: 6, fontWeight: '600' },
+  stepLabelActive: { color: K.accent },
+  stepLine: { width: 28, height: 3, backgroundColor: K.bgCard, marginHorizontal: 6, borderRadius: 2 },
+  stepLineActive: { backgroundColor: K.accent },
+  heading: { fontSize: K.fontXl, fontWeight: '800', color: K.text, marginBottom: 20 },
   selectedCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
-    borderRadius: 16, padding: 16, marginBottom: 20,
-    borderWidth: 2, borderColor: '#2563eb',
+    flexDirection: 'row', alignItems: 'center', backgroundColor: K.bgCard,
+    borderRadius: K.radius, padding: 20, marginBottom: 24,
+    borderWidth: 2, borderColor: K.accent,
   },
-  selectedIcon: { fontSize: 36, marginRight: 16 },
-  selectedName: { fontSize: 16, fontWeight: '600', color: '#1e293b' },
-  selectedPrice: { fontSize: 20, fontWeight: '700', color: '#2563eb' },
-  paymentButtons: { flexDirection: 'row', gap: 12 },
+  selectedIcon: { fontSize: K.iconSize, marginRight: 20 },
+  selectedName: { fontSize: K.fontMd, fontWeight: '700', color: K.text },
+  selectedPrice: { fontSize: K.fontLg, fontWeight: '800', color: K.accent },
+  paymentButtons: { flexDirection: 'row', gap: 16 },
   payBtn: {
-    flex: 1, borderRadius: 16, padding: 24, alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    flex: 1, borderRadius: K.radius, padding: 28, alignItems: 'center',
+    minHeight: 110,
+    justifyContent: 'center',
   },
-  cashBtn: { backgroundColor: '#16a34a' },
-  cardBtn: { backgroundColor: '#2563eb' },
-  payIcon: { fontSize: 36, marginBottom: 8 },
-  payLabel: { fontSize: 18, fontWeight: '700', color: '#fff' },
-  backBtn: { marginTop: 20, alignSelf: 'center' },
-  backText: { fontSize: 16, color: '#64748b' },
-  ticketContainer: { alignItems: 'center', paddingTop: 8 },
-  successIcon: { fontSize: 48, marginBottom: 8 },
-  successText: { fontSize: 22, fontWeight: '700', color: '#16a34a', marginBottom: 20 },
+  cashBtn: { backgroundColor: '#0d7a3e' },
+  cardBtn: { backgroundColor: K.accentDark },
+  payIcon: { fontSize: K.iconSize, marginBottom: 10 },
+  payLabel: { fontSize: K.fontLg, fontWeight: '800', color: '#fff' },
+  backBtn: { marginTop: 24, alignSelf: 'center' },
+  backText: { fontSize: K.fontMd, color: K.textSecondary, fontWeight: '600' },
+  ticketContainer: { alignItems: 'center', paddingTop: 12 },
+  successIcon: { fontSize: 64, marginBottom: 10 },
+  successText: { fontSize: K.fontXl, fontWeight: '800', color: K.green, marginBottom: 24 },
   qrCard: {
-    backgroundColor: '#fff', padding: 24, borderRadius: 20,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1, shadowRadius: 12, elevation: 4, marginBottom: 16,
+    backgroundColor: '#fff', padding: 28, borderRadius: K.radius,
+    marginBottom: 20,
   },
-  ticketId: { fontSize: 18, fontWeight: '700', color: '#1e293b', marginBottom: 4 },
-  ticketInfo: { fontSize: 15, color: '#64748b', marginBottom: 4 },
-  ticketHint: { fontSize: 13, color: '#94a3b8', marginBottom: 24 },
+  ticketId: { fontSize: K.fontLg, fontWeight: '800', color: K.text, marginBottom: 6 },
+  ticketInfo: { fontSize: K.fontMd, color: K.textSecondary, marginBottom: 6 },
+  ticketHint: { fontSize: K.fontSm, color: K.textMuted, marginBottom: 28 },
+  ticketActions: { gap: 14, width: '100%' },
+  printBtn: {
+    backgroundColor: K.bgCard, paddingVertical: 18, paddingHorizontal: 32,
+    borderRadius: K.radiusSm, flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'center', gap: 12, borderWidth: 2, borderColor: K.accentBorder,
+    minHeight: 64,
+  },
+  printIcon: { fontSize: 28 },
+  printText: { fontSize: K.fontMd, fontWeight: '700', color: K.accent },
   newTicketBtn: {
-    backgroundColor: '#2563eb', paddingHorizontal: 32, paddingVertical: 14,
-    borderRadius: 12,
+    backgroundColor: K.accent, paddingHorizontal: 32, paddingVertical: 18,
+    borderRadius: K.radiusSm, alignItems: 'center', minHeight: 64,
+    justifyContent: 'center',
   },
-  newTicketText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  newTicketText: { fontSize: K.fontMd, fontWeight: '800', color: '#fff' },
 });

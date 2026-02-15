@@ -2,18 +2,18 @@ import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { useCountdown } from '../lib/useCountdown';
 import { playClick } from '../lib/sounds';
-
-type WashMode = 'foam' | 'wash';
+import { K } from '../lib/theme';
 
 interface Props {
   totalSeconds: number;
-  onModeSwitch: (mode: WashMode) => void;
+  onModeSwitch: (mode: 'foam' | 'wash', action: 'on' | 'off') => void;
   onComplete: () => void;
   packageName: string;
 }
 
 export default function WashModeSelector({ totalSeconds, onModeSwitch, onComplete, packageName }: Props) {
-  const [activeMode, setActiveMode] = useState<WashMode>('foam');
+  const [foamOn, setFoamOn] = useState(false);
+  const [washOn, setWashOn] = useState(false);
   const { remaining, progress, formatted, isComplete } = useCountdown(totalSeconds);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -32,11 +32,17 @@ export default function WashModeSelector({ totalSeconds, onModeSwitch, onComplet
     }
   }, [isComplete]);
 
-  const handleModeSwitch = (mode: WashMode) => {
-    if (mode === activeMode) return;
+  const toggle = (mode: 'foam' | 'wash') => {
     playClick();
-    setActiveMode(mode);
-    onModeSwitch(mode);
+    if (mode === 'foam') {
+      const next = !foamOn;
+      setFoamOn(next);
+      onModeSwitch('foam', next ? 'on' : 'off');
+    } else {
+      const next = !washOn;
+      setWashOn(next);
+      onModeSwitch('wash', next ? 'on' : 'off');
+    }
   };
 
   return (
@@ -53,34 +59,59 @@ export default function WashModeSelector({ totalSeconds, onModeSwitch, onComplet
         <View style={[styles.progressBar, { width: `${progress}%` }]} />
       </View>
       <Text style={styles.remainingText}>
-        {Math.floor(remaining / 60)} dk {remaining % 60} sn kaldı
+        {Math.floor(remaining / 60)} dk {remaining % 60} sn kaldi
       </Text>
 
-      {/* Mode buttons */}
-      <Text style={styles.modeLabel}>Yıkama Modu</Text>
+      {/* Control buttons */}
+      <Text style={styles.modeLabel}>Kontroller</Text>
+
+      {/* Foam row */}
       <View style={styles.modeRow}>
         <TouchableOpacity
-          style={[styles.modeBtn, styles.foamBtn, activeMode === 'foam' && styles.foamBtnActive]}
-          onPress={() => handleModeSwitch('foam')}
+          style={[styles.modeBtn, foamOn ? styles.onBtnActive : styles.offState]}
+          onPress={() => { if (!foamOn) toggle('foam'); }}
           activeOpacity={0.7}
         >
           <Text style={styles.modeIcon}>🧼</Text>
-          <Text style={[styles.modeText, activeMode === 'foam' && styles.modeTextActive]}>Köpük</Text>
-          {activeMode === 'foam' && <View style={styles.activeIndicator} />}
+          <Text style={[styles.modeText, foamOn && styles.onTextActive]}>Kopuk Ac</Text>
+          {foamOn && <View style={styles.activeIndicator} />}
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.modeBtn, styles.washBtn, activeMode === 'wash' && styles.washBtnActive]}
-          onPress={() => handleModeSwitch('wash')}
+          style={[styles.modeBtn, !foamOn ? styles.offBtnActive : styles.offState]}
+          onPress={() => { if (foamOn) toggle('foam'); }}
           activeOpacity={0.7}
         >
-          <Text style={styles.modeIcon}>🚿</Text>
-          <Text style={[styles.modeText, activeMode === 'wash' && styles.modeTextActive]}>Yıkama</Text>
-          {activeMode === 'wash' && <View style={styles.activeIndicator} />}
+          <Text style={styles.modeIcon}>🧼</Text>
+          <Text style={[styles.modeText, !foamOn && styles.offTextActive]}>Kopuk Kapat</Text>
+          {!foamOn && <View style={styles.inactiveIndicator} />}
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.hint}>Modlar arasında serbestçe geçiş yapabilirsiniz</Text>
+      {/* Wash row */}
+      <View style={styles.modeRow}>
+        <TouchableOpacity
+          style={[styles.modeBtn, washOn ? styles.onBtnActive : styles.offState]}
+          onPress={() => { if (!washOn) toggle('wash'); }}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.modeIcon}>🚿</Text>
+          <Text style={[styles.modeText, washOn && styles.onTextActive]}>Yikama Ac</Text>
+          {washOn && <View style={styles.activeIndicator} />}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.modeBtn, !washOn ? styles.offBtnActive : styles.offState]}
+          onPress={() => { if (washOn) toggle('wash'); }}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.modeIcon}>🚿</Text>
+          <Text style={[styles.modeText, !washOn && styles.offTextActive]}>Yikama Kapat</Text>
+          {!washOn && <View style={styles.inactiveIndicator} />}
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.hint}>Kopuk ve yikama bagımsiz olarak acilip kapatilabilir</Text>
     </View>
   );
 }
@@ -91,47 +122,49 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   packageName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#64748b',
-    marginBottom: 16,
-  },
-  timerContainer: {
-    backgroundColor: '#1e293b',
-    borderRadius: 24,
-    paddingHorizontal: 40,
-    paddingVertical: 20,
+    fontSize: K.fontLg,
+    fontWeight: '700',
+    color: K.accent,
     marginBottom: 20,
   },
+  timerContainer: {
+    backgroundColor: K.bgCard,
+    borderRadius: K.radius,
+    paddingHorizontal: 48,
+    paddingVertical: 24,
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: K.accentBorder,
+  },
   timer: {
-    fontSize: 56,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: 64,
+    fontWeight: '800',
+    color: K.text,
     fontVariant: ['tabular-nums'],
   },
   progressBg: {
     width: '100%',
-    height: 8,
-    backgroundColor: '#e2e8f0',
-    borderRadius: 4,
+    height: 12,
+    backgroundColor: K.bgCard,
+    borderRadius: 6,
     overflow: 'hidden',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#2563eb',
-    borderRadius: 4,
+    backgroundColor: K.accent,
+    borderRadius: 6,
   },
   remainingText: {
-    fontSize: 14,
-    color: '#94a3b8',
-    marginBottom: 28,
+    fontSize: K.fontSm,
+    color: K.textSecondary,
+    marginBottom: 32,
   },
   modeLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: 12,
+    fontSize: K.fontLg,
+    fontWeight: '700',
+    color: K.text,
+    marginBottom: 16,
   },
   modeRow: {
     flexDirection: 'row',
@@ -141,49 +174,58 @@ const styles = StyleSheet.create({
   },
   modeBtn: {
     flex: 1,
-    borderRadius: 20,
+    borderRadius: K.radius,
     padding: 24,
     alignItems: 'center',
     borderWidth: 3,
+    minHeight: 110,
+    justifyContent: 'center',
   },
-  foamBtn: {
-    backgroundColor: '#fff',
-    borderColor: '#e2e8f0',
+  offState: {
+    backgroundColor: K.bgCard,
+    borderColor: K.border,
   },
-  foamBtnActive: {
-    backgroundColor: '#fef3c7',
-    borderColor: '#f59e0b',
+  onBtnActive: {
+    backgroundColor: K.greenBg,
+    borderColor: K.green,
   },
-  washBtn: {
-    backgroundColor: '#fff',
-    borderColor: '#e2e8f0',
-  },
-  washBtnActive: {
-    backgroundColor: '#dbeafe',
-    borderColor: '#2563eb',
+  offBtnActive: {
+    backgroundColor: K.redBg,
+    borderColor: K.red,
   },
   modeIcon: {
-    fontSize: 48,
+    fontSize: K.iconSize,
     marginBottom: 8,
   },
   modeText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#94a3b8',
+    fontSize: K.fontMd,
+    fontWeight: '800',
+    color: K.textMuted,
   },
-  modeTextActive: {
-    color: '#1e293b',
+  onTextActive: {
+    color: K.green,
+  },
+  offTextActive: {
+    color: K.red,
   },
   activeIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#16a34a',
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: K.green,
+    marginTop: 8,
+  },
+  inactiveIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: K.red,
     marginTop: 8,
   },
   hint: {
-    fontSize: 13,
-    color: '#94a3b8',
+    fontSize: K.fontSm,
+    color: K.textMuted,
     textAlign: 'center',
+    marginTop: 8,
   },
 });

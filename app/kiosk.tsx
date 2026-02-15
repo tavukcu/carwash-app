@@ -7,6 +7,7 @@ import WashModeSelector from '../components/WashModeSelector';
 import PageHeader from '../components/PageHeader';
 import { Station, getStations, verifyTicket, startWash, completeWash, logModeSwitch, VerifyTicketResponse } from '../lib/api';
 import { playClick, playBeep, playSuccess, playError, playComplete } from '../lib/sounds';
+import { K } from '../lib/theme';
 
 type Screen = 'stations' | 'scan' | 'confirm' | 'washing' | 'done';
 
@@ -32,7 +33,7 @@ export default function KioskScreen() {
       const data = await getStations();
       setStations(data);
     } catch {
-      Alert.alert('Hata', 'İstasyonlar yüklenemedi');
+      Alert.alert('Hata', 'Istasyonlar yuklenemedi');
     } finally {
       setLoading(false);
     }
@@ -67,7 +68,7 @@ export default function KioskScreen() {
       playSuccess();
     } catch (e: any) {
       playError();
-      Alert.alert('Geçersiz Bilet', e.message || 'QR kod doğrulanamadı');
+      Alert.alert('Gecersiz Bilet', e.message || 'QR kod dogrulanamadi');
       scanLock.current = false;
     } finally {
       setProcessing(false);
@@ -85,7 +86,7 @@ export default function KioskScreen() {
       playSuccess();
     } catch (e: any) {
       playError();
-      Alert.alert('Hata', e.message || 'Yıkama başlatılamadı');
+      Alert.alert('Hata', e.message || 'Yikama baslatilamadi');
     } finally {
       setProcessing(false);
     }
@@ -93,7 +94,6 @@ export default function KioskScreen() {
 
   const handleModeSwitch = (mode: 'foam' | 'wash', action: 'on' | 'off') => {
     if (activeTicketId && selectedStation) {
-      // Fire-and-forget
       logModeSwitch(activeTicketId, selectedStation.id, mode, action).catch(() => {});
     }
   };
@@ -121,21 +121,21 @@ export default function KioskScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#f1f5f9' }}>
-        <PageHeader icon="📱" title="Kiosk" subtitle="QR oku ve yıka" />
-        <View style={styles.center}><ActivityIndicator size="large" color="#2563eb" /></View>
+      <View style={{ flex: 1, backgroundColor: K.bg }}>
+        <PageHeader icon="📱" title="Kiosk" subtitle="QR oku ve yika" />
+        <View style={styles.center}><ActivityIndicator size="large" color={K.accent} /></View>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f1f5f9' }}>
-    <PageHeader icon="📱" title="Kiosk" subtitle="QR oku ve yıka" />
+    <View style={{ flex: 1, backgroundColor: K.bg }}>
+    <PageHeader icon="📱" title="Kiosk" subtitle="QR oku ve yika" />
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Station Selection */}
       {screen === 'stations' && (
         <View>
-          <Text style={styles.heading}>İstasyon Seçin</Text>
+          <Text style={styles.heading}>Istasyon Secin</Text>
           <StationGrid stations={stations} selectedId={null} onSelect={handleStationSelect} />
         </View>
       )}
@@ -144,7 +144,7 @@ export default function KioskScreen() {
       {screen === 'scan' && (
         <View>
           <Text style={styles.heading}>QR Kod Okutun</Text>
-          <Text style={styles.subtext}>{selectedStation?.name} seçildi</Text>
+          <Text style={styles.subtext}>{selectedStation?.name} secildi</Text>
 
           {Platform.OS === 'web' ? (
             <WebQRScanner
@@ -166,14 +166,14 @@ export default function KioskScreen() {
               />
               {processing && (
                 <View style={styles.cameraOverlay}>
-                  <ActivityIndicator size="large" color="#fff" />
-                  <Text style={styles.overlayText}>Doğrulanıyor...</Text>
+                  <ActivityIndicator size="large" color={K.accent} />
+                  <Text style={styles.overlayText}>Dogrulaniyor...</Text>
                 </View>
               )}
             </View>
           ) : (
             <TouchableOpacity style={styles.permBtn} onPress={requestPermission}>
-              <Text style={styles.permText}>Kamera İzni Ver</Text>
+              <Text style={styles.permText}>Kamera Izni Ver</Text>
             </TouchableOpacity>
           )}
 
@@ -183,17 +183,17 @@ export default function KioskScreen() {
               style={styles.input}
               value={manualQR}
               onChangeText={setManualQR}
-              placeholder="QR kodu yazın..."
-              placeholderTextColor="#94a3b8"
+              placeholder="QR kodu yazin..."
+              placeholderTextColor={K.textMuted}
               autoCapitalize="none"
             />
             <TouchableOpacity style={styles.submitBtn} onPress={handleManualSubmit}>
-              <Text style={styles.submitText}>Doğrula</Text>
+              <Text style={styles.submitText}>Dogrula</Text>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={styles.backBtn} onPress={() => { playClick(); setScreen('stations'); }}>
-            <Text style={styles.backText}>← İstasyon Seçimi</Text>
+            <Text style={styles.backText}>← Istasyon Secimi</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -201,16 +201,16 @@ export default function KioskScreen() {
       {/* Confirmation */}
       {screen === 'confirm' && ticketInfo && (
         <View style={styles.confirmContainer}>
-          <Text style={styles.heading}>Yıkama Onay</Text>
+          <Text style={styles.heading}>Yikama Onay</Text>
 
           <View style={styles.confirmCard}>
             <Text style={styles.confirmIcon}>{ticketInfo.icon}</Text>
             <Text style={styles.confirmProgram}>{ticketInfo.package_name}</Text>
             <Text style={styles.confirmPrice}>{ticketInfo.package_price} TL</Text>
-            <Text style={styles.confirmDuration}>Süre: {Math.floor(ticketInfo.duration / 60)} dk</Text>
+            <Text style={styles.confirmDuration}>Sure: {Math.floor(ticketInfo.duration / 60)} dk</Text>
             <Text style={styles.confirmStation}>📍 {selectedStation?.name}</Text>
             <View style={styles.modeNote}>
-              <Text style={styles.modeNoteText}>🧼 Köpük ve 🚿 Yıkama modları arasında serbestçe geçiş yapabilirsiniz</Text>
+              <Text style={styles.modeNoteText}>🧼 Kopuk ve 🚿 Yikama modlari arasinda serbestce gecis yapabilirsiniz</Text>
             </View>
           </View>
 
@@ -222,7 +222,7 @@ export default function KioskScreen() {
             {processing ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.startText}>Yıkamaya Başla</Text>
+              <Text style={styles.startText}>Yikamaya Basla</Text>
             )}
           </TouchableOpacity>
 
@@ -246,9 +246,9 @@ export default function KioskScreen() {
       {screen === 'done' && (
         <View style={styles.doneContainer}>
           <Text style={styles.doneIcon}>✅</Text>
-          <Text style={styles.doneText}>Yıkama Tamamlandı!</Text>
-          <Text style={styles.doneHint}>Aracınızı alabilirsiniz</Text>
-          <Text style={styles.autoReset}>5 saniye içinde sıfırlanacak...</Text>
+          <Text style={styles.doneText}>Yikama Tamamlandi!</Text>
+          <Text style={styles.doneHint}>Aracinizi alabilirsiniz</Text>
+          <Text style={styles.autoReset}>5 saniye icinde sifirlanacak...</Text>
         </View>
       )}
     </ScrollView>
@@ -257,62 +257,65 @@ export default function KioskScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f1f5f9' },
-  content: { padding: 20, paddingBottom: 40 },
+  container: { flex: 1, backgroundColor: K.bg },
+  content: { padding: 24, paddingBottom: 40 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  heading: { fontSize: 22, fontWeight: '700', color: '#1e293b', marginBottom: 8 },
-  subtext: { fontSize: 14, color: '#64748b', marginBottom: 16 },
+  heading: { fontSize: K.fontXl, fontWeight: '800', color: K.text, marginBottom: 12 },
+  subtext: { fontSize: K.fontMd, color: K.accent, marginBottom: 20, fontWeight: '600' },
   cameraContainer: {
-    height: 300, borderRadius: 16, overflow: 'hidden',
-    marginBottom: 16, position: 'relative',
+    height: 320, borderRadius: K.radius, overflow: 'hidden',
+    marginBottom: 20, position: 'relative', borderWidth: 2, borderColor: K.accentBorder,
   },
   camera: { flex: 1 },
   cameraOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center',
   },
-  overlayText: { color: '#fff', fontSize: 16, marginTop: 8 },
+  overlayText: { color: K.accent, fontSize: K.fontMd, marginTop: 10, fontWeight: '600' },
   permBtn: {
-    backgroundColor: '#2563eb', padding: 16, borderRadius: 12,
-    alignItems: 'center', marginBottom: 16,
+    backgroundColor: K.accent, padding: 20, borderRadius: K.radiusSm,
+    alignItems: 'center', marginBottom: 20, minHeight: 64,
   },
-  permText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  orText: { textAlign: 'center', color: '#94a3b8', marginVertical: 12 },
-  manualRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  permText: { color: '#fff', fontSize: K.fontMd, fontWeight: '700' },
+  orText: { textAlign: 'center', color: K.textMuted, marginVertical: 16, fontSize: K.fontSm },
+  manualRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   input: {
-    flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 14,
-    fontSize: 16, borderWidth: 1, borderColor: '#e2e8f0',
+    flex: 1, backgroundColor: K.bgInput, borderRadius: K.radiusSm, padding: 16,
+    fontSize: K.fontMd, borderWidth: 1, borderColor: K.border, color: K.text,
   },
-  submitBtn: { backgroundColor: '#2563eb', borderRadius: 12, paddingHorizontal: 20, justifyContent: 'center' },
-  submitText: { color: '#fff', fontWeight: '600' },
-  backBtn: { marginTop: 12, alignSelf: 'center' },
-  backText: { fontSize: 15, color: '#64748b' },
+  submitBtn: {
+    backgroundColor: K.accent, borderRadius: K.radiusSm, paddingHorizontal: 24,
+    justifyContent: 'center', minHeight: 56,
+  },
+  submitText: { color: '#fff', fontWeight: '700', fontSize: K.fontMd },
+  backBtn: { marginTop: 16, alignSelf: 'center' },
+  backText: { fontSize: K.fontMd, color: K.textSecondary, fontWeight: '600' },
   confirmContainer: { alignItems: 'center' },
   confirmCard: {
-    backgroundColor: '#fff', borderRadius: 20, padding: 24, alignItems: 'center',
-    width: '100%', marginVertical: 20,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08, shadowRadius: 12, elevation: 3,
+    backgroundColor: K.bgCard, borderRadius: K.radius, padding: 28, alignItems: 'center',
+    width: '100%', marginVertical: 24,
+    borderWidth: 1, borderColor: K.border,
   },
-  confirmIcon: { fontSize: 48, marginBottom: 12 },
-  confirmProgram: { fontSize: 20, fontWeight: '700', color: '#1e293b', marginBottom: 4 },
-  confirmPrice: { fontSize: 24, fontWeight: '700', color: '#2563eb', marginBottom: 4 },
-  confirmDuration: { fontSize: 15, color: '#64748b', marginBottom: 8 },
-  confirmStation: { fontSize: 16, fontWeight: '600', color: '#1e293b', marginBottom: 12 },
+  confirmIcon: { fontSize: 64, marginBottom: 16 },
+  confirmProgram: { fontSize: K.fontLg, fontWeight: '800', color: K.text, marginBottom: 6 },
+  confirmPrice: { fontSize: K.fontXl, fontWeight: '800', color: K.accent, marginBottom: 6 },
+  confirmDuration: { fontSize: K.fontMd, color: K.textSecondary, marginBottom: 10 },
+  confirmStation: { fontSize: K.fontMd, fontWeight: '700', color: K.text, marginBottom: 16 },
   modeNote: {
-    backgroundColor: '#f0f9ff', borderRadius: 12, padding: 12, width: '100%',
+    backgroundColor: K.accentGlow, borderRadius: K.radiusSm, padding: 14, width: '100%',
+    borderWidth: 1, borderColor: K.accentBorder,
   },
   modeNoteText: {
-    fontSize: 13, color: '#0369a1', textAlign: 'center', lineHeight: 18,
+    fontSize: K.fontSm, color: K.accent, textAlign: 'center', lineHeight: 22,
   },
   startBtn: {
-    backgroundColor: '#16a34a', paddingHorizontal: 40, paddingVertical: 16,
-    borderRadius: 14, width: '100%', alignItems: 'center',
+    backgroundColor: '#0d7a3e', paddingHorizontal: 40, paddingVertical: 20,
+    borderRadius: K.radiusSm, width: '100%', alignItems: 'center', minHeight: 64,
   },
-  startText: { color: '#fff', fontSize: 18, fontWeight: '700' },
-  doneContainer: { alignItems: 'center', paddingTop: 40 },
-  doneIcon: { fontSize: 64, marginBottom: 16 },
-  doneText: { fontSize: 26, fontWeight: '700', color: '#16a34a', marginBottom: 8 },
-  doneHint: { fontSize: 18, color: '#64748b', marginBottom: 24 },
-  autoReset: { fontSize: 13, color: '#94a3b8' },
+  startText: { color: '#fff', fontSize: K.fontLg, fontWeight: '800' },
+  doneContainer: { alignItems: 'center', paddingTop: 48 },
+  doneIcon: { fontSize: 80, marginBottom: 20 },
+  doneText: { fontSize: 32, fontWeight: '800', color: K.green, marginBottom: 10 },
+  doneHint: { fontSize: K.fontLg, color: K.textSecondary, marginBottom: 28 },
+  autoReset: { fontSize: K.fontSm, color: K.textMuted },
 });

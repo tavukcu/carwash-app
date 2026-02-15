@@ -1,41 +1,43 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { playClick } from '../lib/sounds';
+import { K } from '../lib/theme';
 
 export default function HomeScreen() {
   const router = useRouter();
 
   const buttons = [
-    { label: 'Kasa', icon: '💰', desc: 'Bilet oluştur', route: '/cashier' as const },
-    { label: 'Kiosk', icon: '📱', desc: 'QR oku ve yıka', route: '/kiosk' as const },
-    { label: 'Yönetim', icon: '⚙️', desc: 'Admin paneli', route: '/admin' as const },
+    { label: 'Kasa', icon: '💰', desc: 'Bilet olustur', route: '/cashier' as const },
+    { label: 'Kiosk', icon: '📱', desc: 'QR oku ve yika', route: '/kiosk' as const },
+    { label: 'Yonetim', icon: '⚙️', desc: 'Admin paneli', route: '/admin' as const },
   ];
 
   return (
     <View style={styles.container}>
-      <View style={styles.gradient}>
-        <View style={styles.content}>
-          <Text style={styles.logo}>🚗💦</Text>
-          <Text style={styles.title}>Self-Servis{'\n'}Araç Yıkama</Text>
-          <Text style={styles.subtitle}>Zamanlı Self-Servis Yıkama Sistemi</Text>
+      <View style={styles.content}>
+        <Text style={styles.logo}>🚗💦</Text>
+        <Text style={styles.title}>Self-Servis{'\n'}Arac Yikama</Text>
+        <Text style={styles.subtitle}>Zamanli Self-Servis Yikama Sistemi</Text>
 
-          <View style={styles.buttons}>
-            {buttons.map((b) => (
-              <TouchableOpacity
-                key={b.label}
-                style={styles.btn}
-                onPress={() => { playClick(); router.push(b.route); }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.btnIcon}>{b.icon}</Text>
+        <View style={styles.buttons}>
+          {buttons.map((b) => (
+            <TouchableOpacity
+              key={b.label}
+              style={styles.btn}
+              onPress={() => { playClick(); router.push(b.route); }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.btnIcon}>{b.icon}</Text>
+              <View style={styles.btnTextWrap}>
                 <Text style={styles.btnLabel}>{b.label}</Text>
                 <Text style={styles.btnDesc}>{b.desc}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={styles.footer}>5 İstasyon • Nakit / Kart • Anında Yıkama</Text>
+              </View>
+              <Text style={styles.btnArrow}>›</Text>
+            </TouchableOpacity>
+          ))}
         </View>
+
+        <Text style={styles.footer}>5 Istasyon • Nakit / Kart • Aninda Yikama</Text>
       </View>
     </View>
   );
@@ -44,65 +46,72 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradient: {
-    flex: 1,
-    backgroundColor: '#1e3a5f',
+    backgroundColor: K.bg,
   },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: 28,
     paddingTop: 60,
   },
   logo: {
-    fontSize: 56,
-    marginBottom: 16,
+    fontSize: K.iconSizeLg,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#fff',
+    fontSize: 36,
+    fontWeight: '900',
+    color: K.text,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   subtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.7)',
-    marginBottom: 40,
+    fontSize: K.fontMd,
+    color: K.accent,
+    marginBottom: 48,
+    fontWeight: '600',
   },
   buttons: {
     width: '100%',
-    gap: 16,
-    marginBottom: 40,
+    gap: 18,
+    marginBottom: 48,
   },
   btn: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: K.bgCard,
+    borderRadius: K.radius,
+    padding: 24,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: K.border,
+    minHeight: K.btnHeight,
   },
   btnIcon: {
-    fontSize: 32,
-    marginRight: 16,
+    fontSize: K.iconSize,
+    marginRight: 20,
   },
-  btnLabel: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
+  btnTextWrap: {
     flex: 1,
   },
+  btnLabel: {
+    fontSize: K.fontLg,
+    fontWeight: '800',
+    color: K.text,
+  },
   btnDesc: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
+    fontSize: K.fontSm,
+    color: K.textSecondary,
+    marginTop: 2,
+  },
+  btnArrow: {
+    fontSize: 32,
+    color: K.accent,
+    fontWeight: '300',
   },
   footer: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
+    fontSize: K.fontSm,
+    color: K.textMuted,
     textAlign: 'center',
   },
 });

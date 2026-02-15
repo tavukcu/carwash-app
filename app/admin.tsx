@@ -9,12 +9,13 @@ import {
   updateStation, updatePackage, createPackage, deletePackage, getReports,
 } from '../lib/api';
 import { playClick } from '../lib/sounds';
+import { K } from '../lib/theme';
 
 type Tab = 'dashboard' | 'stations' | 'packages' | 'tickets' | 'reports';
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'dashboard', label: 'Panel', icon: '📊' },
-  { key: 'stations', label: 'İstasyonlar', icon: '🚿' },
+  { key: 'stations', label: 'Istasyonlar', icon: '🚿' },
   { key: 'packages', label: 'Paketler', icon: '⏱️' },
   { key: 'tickets', label: 'Biletler', icon: '🎫' },
   { key: 'reports', label: 'Raporlar', icon: '📈' },
@@ -24,33 +25,21 @@ export default function AdminScreen() {
   const [tab, setTab] = useState<Tab>('dashboard');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Dashboard
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-
-  // Stations
   const [stations, setStations] = useState<Station[]>([]);
-
-  // Packages
   const [packages, setPackages] = useState<TimePackage[]>([]);
   const [editingPackage, setEditingPackage] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editDuration, setEditDuration] = useState('');
-
-  // New package form
   const [showNewForm, setShowNewForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPrice, setNewPrice] = useState('');
   const [newDuration, setNewDuration] = useState('');
-
-  // Tickets
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ticketFilter, setTicketFilter] = useState<string>('');
-
-  // Reports
   const [reports, setReports] = useState<ReportsResponse | null>(null);
   const [reportPeriod, setReportPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
-
   const [loading, setLoading] = useState(true);
 
   const loadTab = useCallback(async () => {
@@ -105,7 +94,7 @@ export default function AdminScreen() {
     const data: any = {};
     if (editName) data.name = editName;
     if (editPrice) data.price = Number(editPrice);
-    if (editDuration) data.duration = Number(editDuration) * 60; // dk -> sn
+    if (editDuration) data.duration = Number(editDuration) * 60;
     try {
       await updatePackage(id, data);
       setPackages(await getPackages());
@@ -117,7 +106,7 @@ export default function AdminScreen() {
 
   const handleCreatePackage = async () => {
     if (!newName || !newPrice || !newDuration) {
-      Alert.alert('Hata', 'Tüm alanları doldurun');
+      Alert.alert('Hata', 'Tum alanlari doldurun');
       return;
     }
     playClick();
@@ -125,7 +114,7 @@ export default function AdminScreen() {
       await createPackage({
         name: newName,
         price: Number(newPrice),
-        duration: Number(newDuration) * 60, // dk -> sn
+        duration: Number(newDuration) * 60,
       });
       setPackages(await getPackages());
       setShowNewForm(false);
@@ -140,9 +129,9 @@ export default function AdminScreen() {
   const handleDeletePackage = (id: number, name: string) => {
     Alert.alert(
       'Paket Sil',
-      `"${name}" paketini silmek istediğinize emin misiniz?`,
+      `"${name}" paketini silmek istediginize emin misiniz?`,
       [
-        { text: 'İptal', style: 'cancel' },
+        { text: 'Iptal', style: 'cancel' },
         {
           text: 'Sil',
           style: 'destructive',
@@ -188,10 +177,10 @@ export default function AdminScreen() {
       <ScrollView
         style={styles.body}
         contentContainerStyle={styles.bodyContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={K.accent} />}
       >
         {loading ? (
-          <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color={K.accent} style={{ marginTop: 40 }} />
         ) : (
           <>
             {/* Dashboard */}
@@ -199,12 +188,12 @@ export default function AdminScreen() {
               <View>
                 <Text style={styles.heading}>Dashboard</Text>
                 <View style={styles.statGrid}>
-                  <StatCard icon="💰" label="Bugün Gelir" value={`${dashboard.todayIncome} TL`} color="#16a34a" />
-                  <StatCard icon="🎫" label="Bugün Bilet" value={String(dashboard.todayTickets)} color="#2563eb" />
-                  <StatCard icon="🚿" label="Aktif İstasyon" value={String(dashboard.activeStations)} color="#f59e0b" />
-                  <StatCard icon="⏳" label="Bekleyen Bilet" value={String(dashboard.pendingTickets)} color="#8b5cf6" />
-                  <StatCard icon="🔄" label="Toplam Yıkama" value={String(dashboard.totalWashes)} color="#06b6d4" />
-                  <StatCard icon="💎" label="Toplam Gelir" value={`${dashboard.totalIncome} TL`} color="#ec4899" />
+                  <StatCard icon="💰" label="Bugun Gelir" value={`${dashboard.todayIncome} TL`} color={K.green} />
+                  <StatCard icon="🎫" label="Bugun Bilet" value={String(dashboard.todayTickets)} color={K.accent} />
+                  <StatCard icon="🚿" label="Aktif Istasyon" value={String(dashboard.activeStations)} color={K.yellow} />
+                  <StatCard icon="⏳" label="Bekleyen Bilet" value={String(dashboard.pendingTickets)} color={K.purple} />
+                  <StatCard icon="🔄" label="Toplam Yikama" value={String(dashboard.totalWashes)} color={K.accent} />
+                  <StatCard icon="💎" label="Toplam Gelir" value={`${dashboard.totalIncome} TL`} color="#ff6b9d" />
                 </View>
               </View>
             )}
@@ -212,7 +201,7 @@ export default function AdminScreen() {
             {/* Stations */}
             {tab === 'stations' && (
               <View>
-                <Text style={styles.heading}>İstasyonlar</Text>
+                <Text style={styles.heading}>Istasyonlar</Text>
                 {stations.map((s) => (
                   <View key={s.id} style={styles.listCard}>
                     <View style={styles.listHeader}>
@@ -221,16 +210,16 @@ export default function AdminScreen() {
                     </View>
                     <View style={styles.actionRow}>
                       <TouchableOpacity
-                        style={[styles.smallBtn, { backgroundColor: '#16a34a' }]}
+                        style={[styles.smallBtn, { backgroundColor: '#0d7a3e' }]}
                         onPress={() => handleStationStatus(s.id, 'idle')}
                       >
-                        <Text style={styles.smallBtnText}>Boş</Text>
+                        <Text style={styles.smallBtnText}>Bos</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.smallBtn, { backgroundColor: '#dc2626' }]}
+                        style={[styles.smallBtn, { backgroundColor: '#c62828' }]}
                         onPress={() => handleStationStatus(s.id, 'maintenance')}
                       >
-                        <Text style={styles.smallBtnText}>Bakımda</Text>
+                        <Text style={styles.smallBtnText}>Bakimda</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -244,10 +233,10 @@ export default function AdminScreen() {
                 <View style={styles.headingRow}>
                   <Text style={styles.heading}>Paketler</Text>
                   <TouchableOpacity
-                    style={[styles.smallBtn, { backgroundColor: '#16a34a' }]}
+                    style={[styles.smallBtn, { backgroundColor: '#0d7a3e' }]}
                     onPress={() => { playClick(); setShowNewForm(!showNewForm); }}
                   >
-                    <Text style={styles.smallBtnText}>{showNewForm ? 'İptal' : '+ Paket Ekle'}</Text>
+                    <Text style={styles.smallBtnText}>{showNewForm ? 'Iptal' : '+ Paket Ekle'}</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -255,8 +244,8 @@ export default function AdminScreen() {
                   <View style={styles.newFormCard}>
                     <TextInput
                       style={styles.editInput}
-                      placeholder="Paket adı (ör: 25 Dakika)"
-                      placeholderTextColor="#94a3b8"
+                      placeholder="Paket adi (or: 25 Dakika)"
+                      placeholderTextColor={K.textMuted}
                       value={newName}
                       onChangeText={setNewName}
                     />
@@ -264,25 +253,25 @@ export default function AdminScreen() {
                       <TextInput
                         style={styles.editInput}
                         placeholder="Fiyat (TL)"
-                        placeholderTextColor="#94a3b8"
+                        placeholderTextColor={K.textMuted}
                         keyboardType="numeric"
                         value={newPrice}
                         onChangeText={setNewPrice}
                       />
                       <TextInput
                         style={styles.editInput}
-                        placeholder="Süre (dk)"
-                        placeholderTextColor="#94a3b8"
+                        placeholder="Sure (dk)"
+                        placeholderTextColor={K.textMuted}
                         keyboardType="numeric"
                         value={newDuration}
                         onChangeText={setNewDuration}
                       />
                     </View>
                     <TouchableOpacity
-                      style={[styles.smallBtn, { backgroundColor: '#16a34a', alignSelf: 'flex-end', marginTop: 8 }]}
+                      style={[styles.smallBtn, { backgroundColor: '#0d7a3e', alignSelf: 'flex-end', marginTop: 10 }]}
                       onPress={handleCreatePackage}
                     >
-                      <Text style={styles.smallBtnText}>Oluştur</Text>
+                      <Text style={styles.smallBtnText}>Olustur</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -301,7 +290,7 @@ export default function AdminScreen() {
                           <TextInput
                             style={styles.editInput}
                             placeholder="Ad"
-                            placeholderTextColor="#94a3b8"
+                            placeholderTextColor={K.textMuted}
                             value={editName}
                             onChangeText={setEditName}
                           />
@@ -310,21 +299,21 @@ export default function AdminScreen() {
                           <TextInput
                             style={styles.editInput}
                             placeholder="Fiyat (TL)"
-                            placeholderTextColor="#94a3b8"
+                            placeholderTextColor={K.textMuted}
                             keyboardType="numeric"
                             value={editPrice}
                             onChangeText={setEditPrice}
                           />
                           <TextInput
                             style={styles.editInput}
-                            placeholder="Süre (dk)"
-                            placeholderTextColor="#94a3b8"
+                            placeholder="Sure (dk)"
+                            placeholderTextColor={K.textMuted}
                             keyboardType="numeric"
                             value={editDuration}
                             onChangeText={setEditDuration}
                           />
                           <TouchableOpacity
-                            style={[styles.smallBtn, { backgroundColor: '#16a34a' }]}
+                            style={[styles.smallBtn, { backgroundColor: '#0d7a3e' }]}
                             onPress={() => handlePackageUpdate(p.id)}
                           >
                             <Text style={styles.smallBtnText}>Kaydet</Text>
@@ -334,7 +323,7 @@ export default function AdminScreen() {
                     ) : (
                       <View style={styles.actionRow}>
                         <TouchableOpacity
-                          style={[styles.smallBtn, { backgroundColor: '#2563eb' }]}
+                          style={[styles.smallBtn, { backgroundColor: K.accentDark }]}
                           onPress={() => {
                             playClick();
                             setEditingPackage(p.id);
@@ -343,10 +332,10 @@ export default function AdminScreen() {
                             setEditDuration(String(Math.floor(p.duration / 60)));
                           }}
                         >
-                          <Text style={styles.smallBtnText}>Düzenle</Text>
+                          <Text style={styles.smallBtnText}>Duzenle</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                          style={[styles.smallBtn, { backgroundColor: '#dc2626' }]}
+                          style={[styles.smallBtn, { backgroundColor: '#c62828' }]}
                           onPress={() => handleDeletePackage(p.id, p.name)}
                         >
                           <Text style={styles.smallBtnText}>Sil</Text>
@@ -364,9 +353,9 @@ export default function AdminScreen() {
                 <Text style={styles.heading}>Biletler</Text>
                 <View style={styles.filterRow}>
                   {[
-                    { key: '', label: 'Tümü' },
+                    { key: '', label: 'Tumu' },
                     { key: 'pending', label: 'Bekleyen' },
-                    { key: 'used', label: 'Kullanıldı' },
+                    { key: 'used', label: 'Kullanildi' },
                   ].map((f) => (
                     <TouchableOpacity
                       key={f.key}
@@ -381,7 +370,7 @@ export default function AdminScreen() {
                 </View>
 
                 {tickets.length === 0 ? (
-                  <Text style={styles.emptyText}>Bilet bulunamadı</Text>
+                  <Text style={styles.emptyText}>Bilet bulunamadi</Text>
                 ) : (
                   tickets.map((t) => (
                     <View key={t.id} style={styles.listCard}>
@@ -408,9 +397,9 @@ export default function AdminScreen() {
                 <Text style={styles.heading}>Raporlar</Text>
                 <View style={styles.filterRow}>
                   {[
-                    { key: 'daily' as const, label: 'Günlük' },
-                    { key: 'weekly' as const, label: 'Haftalık' },
-                    { key: 'monthly' as const, label: 'Aylık' },
+                    { key: 'daily' as const, label: 'Gunluk' },
+                    { key: 'weekly' as const, label: 'Haftalik' },
+                    { key: 'monthly' as const, label: 'Aylik' },
                   ].map((f) => (
                     <TouchableOpacity
                       key={f.key}
@@ -424,7 +413,6 @@ export default function AdminScreen() {
                   ))}
                 </View>
 
-                {/* Income Report */}
                 <Text style={styles.sectionTitle}>Gelir Raporu</Text>
                 {reports.report.length === 0 ? (
                   <Text style={styles.emptyText}>Veri yok</Text>
@@ -432,14 +420,13 @@ export default function AdminScreen() {
                   reports.report.map((r, i) => (
                     <View key={i} style={styles.reportRow}>
                       <Text style={styles.reportDate}>{r.date}</Text>
-                      <Text style={styles.reportCount}>{r.wash_count} yıkama</Text>
+                      <Text style={styles.reportCount}>{r.wash_count} yikama</Text>
                       <Text style={styles.reportIncome}>{r.total_income} TL</Text>
                     </View>
                   ))
                 )}
 
-                {/* Package Stats */}
-                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Paket İstatistikleri</Text>
+                <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Paket Istatistikleri</Text>
                 {reports.packageStats.map((ps, i) => (
                   <View key={i} style={styles.reportRow}>
                     <Text style={styles.reportDate}>{ps.name}</Text>
@@ -467,108 +454,109 @@ function StatCard({ icon, label, value, color }: { icon: string; label: string; 
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { bg: string; text: string; label: string }> = {
-    idle: { bg: '#dcfce7', text: '#16a34a', label: 'Boş' },
-    active: { bg: '#fef3c7', text: '#f59e0b', label: 'Aktif' },
-    maintenance: { bg: '#fee2e2', text: '#dc2626', label: 'Bakımda' },
-    pending: { bg: '#fef3c7', text: '#f59e0b', label: 'Bekliyor' },
-    used: { bg: '#dcfce7', text: '#16a34a', label: 'Kullanıldı' },
-    expired: { bg: '#fee2e2', text: '#dc2626', label: 'Süresi Doldu' },
+  const map: Record<string, { bg: string; border: string; text: string; label: string }> = {
+    idle: { bg: K.greenBg, border: K.greenBorder, text: K.green, label: 'Bos' },
+    active: { bg: K.yellowBg, border: K.yellowBorder, text: K.yellow, label: 'Aktif' },
+    maintenance: { bg: K.redBg, border: K.redBorder, text: K.red, label: 'Bakimda' },
+    pending: { bg: K.yellowBg, border: K.yellowBorder, text: K.yellow, label: 'Bekliyor' },
+    used: { bg: K.greenBg, border: K.greenBorder, text: K.green, label: 'Kullanildi' },
+    expired: { bg: K.redBg, border: K.redBorder, text: K.red, label: 'Suresi Doldu' },
   };
   const s = map[status] || map.idle;
   return (
-    <View style={[badgeStyles.badge, { backgroundColor: s.bg }]}>
+    <View style={[badgeStyles.badge, { backgroundColor: s.bg, borderColor: s.border }]}>
       <Text style={[badgeStyles.text, { color: s.text }]}>{s.label}</Text>
     </View>
   );
 }
 
 const badgeStyles = StyleSheet.create({
-  badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8 },
-  text: { fontSize: 12, fontWeight: '600' },
+  badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 10, borderWidth: 1 },
+  text: { fontSize: K.fontXs, fontWeight: '700' },
 });
 
 const statStyles = StyleSheet.create({
   card: {
-    width: '47%', backgroundColor: '#fff', borderRadius: 14, padding: 14,
-    borderLeftWidth: 4, marginBottom: 12,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
+    width: '47%', backgroundColor: K.bgCard, borderRadius: K.radiusSm, padding: 16,
+    borderLeftWidth: 4, marginBottom: 14,
+    borderWidth: 1, borderColor: K.border,
   },
-  icon: { fontSize: 24, marginBottom: 4 },
-  label: { fontSize: 12, color: '#64748b', marginBottom: 2 },
-  value: { fontSize: 20, fontWeight: '700' },
+  icon: { fontSize: 28, marginBottom: 6 },
+  label: { fontSize: K.fontXs, color: K.textSecondary, marginBottom: 4 },
+  value: { fontSize: K.fontLg, fontWeight: '800' },
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f1f5f9' },
+  container: { flex: 1, backgroundColor: K.bg },
   pageHeader: {
-    backgroundColor: '#1e3a5f',
-    paddingTop: Platform.OS === 'web' ? 16 : 56,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
+    backgroundColor: K.bgHeader,
+    paddingTop: Platform.OS === 'web' ? 20 : 56,
+    paddingBottom: 20,
+    paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: K.accentBorder,
   },
-  pageHeaderIcon: { fontSize: 28 },
-  pageHeaderTitle: { fontSize: 20, fontWeight: '700', color: '#fff' },
-  pageHeaderSub: { fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
+  pageHeaderIcon: { fontSize: K.iconSize },
+  pageHeaderTitle: { fontSize: K.fontXl, fontWeight: '800', color: K.text },
+  pageHeaderSub: { fontSize: K.fontSm, color: K.accent, marginTop: 2 },
   tabBar: {
-    maxHeight: 56, backgroundColor: '#fff', borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    maxHeight: 60, backgroundColor: K.bgCard, borderBottomWidth: 1,
+    borderBottomColor: K.border,
   },
   tab: {
-    paddingHorizontal: 16, paddingVertical: 12,
-    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 20, paddingVertical: 14,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
   },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: '#2563eb' },
-  tabIcon: { fontSize: 16 },
-  tabLabel: { fontSize: 13, color: '#64748b', fontWeight: '500' },
-  tabLabelActive: { color: '#2563eb', fontWeight: '700' },
+  tabActive: { borderBottomWidth: 3, borderBottomColor: K.accent },
+  tabIcon: { fontSize: 20 },
+  tabLabel: { fontSize: K.fontSm, color: K.textMuted, fontWeight: '600' },
+  tabLabelActive: { color: K.accent, fontWeight: '800' },
   body: { flex: 1 },
-  bodyContent: { padding: 16, paddingBottom: 40 },
-  heading: { fontSize: 22, fontWeight: '700', color: '#1e293b', marginBottom: 16 },
-  headingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  bodyContent: { padding: 20, paddingBottom: 40 },
+  heading: { fontSize: K.fontXl, fontWeight: '800', color: K.text, marginBottom: 20 },
+  headingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   listCard: {
-    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+    backgroundColor: K.bgCard, borderRadius: K.radiusSm, padding: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: K.border,
   },
-  listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  listTitle: { fontSize: 15, fontWeight: '600', color: '#1e293b', flex: 1 },
-  actionRow: { flexDirection: 'row', gap: 8, marginTop: 6 },
-  smallBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
-  smallBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
-  priceTag: { fontSize: 16, fontWeight: '700', color: '#2563eb' },
-  durationText: { fontSize: 13, color: '#64748b' },
-  editRow: { flexDirection: 'row', gap: 8, marginTop: 10, alignItems: 'center' },
+  listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  listTitle: { fontSize: K.fontMd, fontWeight: '700', color: K.text, flex: 1 },
+  actionRow: { flexDirection: 'row', gap: 10, marginTop: 8 },
+  smallBtn: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10, minHeight: 44 },
+  smallBtnText: { color: '#fff', fontSize: K.fontSm, fontWeight: '700' },
+  priceTag: { fontSize: K.fontMd, fontWeight: '800', color: K.accent },
+  durationText: { fontSize: K.fontSm, color: K.textSecondary },
+  editRow: { flexDirection: 'row', gap: 10, marginTop: 12, alignItems: 'center' },
   editInput: {
-    flex: 1, backgroundColor: '#f8fafc', borderRadius: 8, padding: 10,
-    borderWidth: 1, borderColor: '#e2e8f0', fontSize: 14,
+    flex: 1, backgroundColor: K.bgInput, borderRadius: 10, padding: 12,
+    borderWidth: 1, borderColor: K.border, fontSize: K.fontSm, color: K.text,
   },
   newFormCard: {
-    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 16,
-    borderWidth: 1, borderColor: '#e2e8f0',
+    backgroundColor: K.bgCard, borderRadius: K.radiusSm, padding: 16, marginBottom: 20,
+    borderWidth: 1, borderColor: K.border,
   },
-  filterRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  filterRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   filterBtn: {
-    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: '#fff', borderWidth: 1, borderColor: '#e2e8f0',
+    paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20,
+    backgroundColor: K.bgCard, borderWidth: 1, borderColor: K.border,
   },
-  filterActive: { backgroundColor: '#2563eb', borderColor: '#2563eb' },
-  filterText: { fontSize: 13, color: '#64748b', fontWeight: '500' },
+  filterActive: { backgroundColor: K.accent, borderColor: K.accent },
+  filterText: { fontSize: K.fontSm, color: K.textMuted, fontWeight: '600' },
   filterTextActive: { color: '#fff' },
-  emptyText: { fontSize: 14, color: '#94a3b8', textAlign: 'center', marginTop: 20 },
-  ticketMeta: { fontSize: 13, color: '#64748b' },
-  ticketDate: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
-  sectionTitle: { fontSize: 17, fontWeight: '600', color: '#1e293b', marginBottom: 10 },
+  emptyText: { fontSize: K.fontSm, color: K.textMuted, textAlign: 'center', marginTop: 24 },
+  ticketMeta: { fontSize: K.fontSm, color: K.textSecondary },
+  ticketDate: { fontSize: K.fontXs, color: K.textMuted, marginTop: 4 },
+  sectionTitle: { fontSize: K.fontLg, fontWeight: '700', color: K.text, marginBottom: 12 },
   reportRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: '#fff', borderRadius: 10, padding: 12, marginBottom: 6,
+    backgroundColor: K.bgCard, borderRadius: 10, padding: 14, marginBottom: 8,
+    borderWidth: 1, borderColor: K.border,
   },
-  reportDate: { fontSize: 13, color: '#1e293b', flex: 1 },
-  reportCount: { fontSize: 13, color: '#64748b', marginRight: 12 },
-  reportIncome: { fontSize: 14, fontWeight: '700', color: '#2563eb' },
+  reportDate: { fontSize: K.fontSm, color: K.text, flex: 1 },
+  reportCount: { fontSize: K.fontSm, color: K.textSecondary, marginRight: 14 },
+  reportIncome: { fontSize: K.fontMd, fontWeight: '800', color: K.accent },
 });
