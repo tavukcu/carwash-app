@@ -70,10 +70,10 @@ const styles = StyleSheet.create({
     color: K.accent,
   },
   price: {
-    fontSize: K.fontLg,
-    fontWeight: '800',
+    fontSize: 36,
+    fontWeight: '900',
     color: K.accent,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   duration: {
     fontSize: K.fontSm,
