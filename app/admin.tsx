@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  ActivityIndicator, Alert, TextInput, RefreshControl,
+  ActivityIndicator, Alert, TextInput, RefreshControl, Platform,
 } from 'react-native';
 import {
   DashboardData, Station, TimePackage, Ticket, ReportsResponse,
@@ -162,6 +162,15 @@ export default function AdminScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.pageHeader}>
+        <Text style={styles.pageHeaderIcon}>⚙️</Text>
+        <View>
+          <Text style={styles.pageHeaderTitle}>Yonetim Paneli</Text>
+          <Text style={styles.pageHeaderSub}>Admin</Text>
+        </View>
+      </View>
+
       {/* Tab Bar */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar}>
         {TABS.map((t) => (
@@ -493,6 +502,18 @@ const statStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f1f5f9' },
+  pageHeader: {
+    backgroundColor: '#1e3a5f',
+    paddingTop: Platform.OS === 'web' ? 16 : 56,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  pageHeaderIcon: { fontSize: 28 },
+  pageHeaderTitle: { fontSize: 20, fontWeight: '700', color: '#fff' },
+  pageHeaderSub: { fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
   tabBar: {
     maxHeight: 56, backgroundColor: '#fff', borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',

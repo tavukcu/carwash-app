@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import PackageGrid from '../components/PackageGrid';
+import PageHeader from '../components/PageHeader';
 import { TimePackage, getPackages, createTicket, CreateTicketResponse } from '../lib/api';
 import { playClick, playSuccess, playError } from '../lib/sounds';
 
@@ -60,6 +61,8 @@ export default function CashierScreen() {
   }
 
   return (
+    <View style={{ flex: 1, backgroundColor: '#f1f5f9' }}>
+    <PageHeader icon="💰" title="Kasa" subtitle="Bilet oluştur" />
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Steps indicator */}
       <View style={styles.steps}>
@@ -147,6 +150,7 @@ export default function CashierScreen() {
         </View>
       )}
     </ScrollView>
+    </View>
   );
 }
 
