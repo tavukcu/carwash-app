@@ -130,14 +130,14 @@ const styles = StyleSheet.create({
   timerContainer: {
     backgroundColor: K.bgCard,
     borderRadius: K.radius,
-    paddingHorizontal: 48,
-    paddingVertical: 24,
+    paddingHorizontal: 56,
+    paddingVertical: 28,
     marginBottom: 24,
     borderWidth: 2,
     borderColor: K.accentBorder,
   },
   timer: {
-    fontSize: 64,
+    fontSize: 72,
     fontWeight: '800',
     color: K.text,
     fontVariant: ['tabular-nums'],
@@ -175,10 +175,10 @@ const styles = StyleSheet.create({
   modeBtn: {
     flex: 1,
     borderRadius: K.radius,
-    padding: 24,
+    padding: 30,
     alignItems: 'center',
     borderWidth: 3,
-    minHeight: 110,
+    minHeight: 130,
     justifyContent: 'center',
   },
   offState: {

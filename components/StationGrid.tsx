@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     width: '30%',
     backgroundColor: K.bgCard,
     borderRadius: K.radius,
-    padding: 18,
+    padding: 22,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: K.border,

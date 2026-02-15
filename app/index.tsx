@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontSize: 36,
+    fontSize: 40,
     fontWeight: '900',
     color: K.text,
     textAlign: 'center',
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   btn: {
     backgroundColor: K.bgCard,
     borderRadius: K.radius,
-    padding: 24,
+    padding: 30,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   },
   btnIcon: {
     fontSize: K.iconSize,
-    marginRight: 20,
+    marginRight: 24,
   },
   btnTextWrap: {
     flex: 1,
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   btnArrow: {
-    fontSize: 32,
+    fontSize: 38,
     color: K.accent,
     fontWeight: '300',
   },

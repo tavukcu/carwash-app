@@ -507,8 +507,8 @@ const styles = StyleSheet.create({
     borderBottomColor: K.border,
   },
   tab: {
-    paddingHorizontal: 20, paddingVertical: 14,
-    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 22, paddingVertical: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
   },
   tabActive: { borderBottomWidth: 3, borderBottomColor: K.accent },
   tabIcon: { fontSize: 20 },
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
   listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   listTitle: { fontSize: K.fontMd, fontWeight: '700', color: K.text, flex: 1 },
   actionRow: { flexDirection: 'row', gap: 10, marginTop: 8 },
-  smallBtn: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 10, minHeight: 44 },
+  smallBtn: { paddingHorizontal: 22, paddingVertical: 14, borderRadius: 12, minHeight: 52 },
   smallBtnText: { color: '#fff', fontSize: K.fontSm, fontWeight: '700' },
   priceTag: { fontSize: K.fontMd, fontWeight: '800', color: K.accent },
   durationText: { fontSize: K.fontSm, color: K.textSecondary },
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
   },
   filterRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   filterBtn: {
-    paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20,
+    paddingHorizontal: 24, paddingVertical: 14, borderRadius: 22,
     backgroundColor: K.bgCard, borderWidth: 1, borderColor: K.border,
   },
   filterActive: { backgroundColor: K.accent, borderColor: K.accent },
