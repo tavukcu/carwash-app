@@ -8,6 +8,7 @@ import {
   DashboardData, Station, TimePackage, Ticket, ReportsResponse,
   getDashboard, getStations, getPackages, getTickets,
   updateStation, updatePackage, createPackage, deletePackage, getReports,
+  completeWash,
 } from '../lib/api';
 import { playClick } from '../lib/sounds';
 import { K } from '../lib/theme';
@@ -94,6 +95,16 @@ export default function AdminScreen() {
       setStations(await getStations());
     } catch (e: any) {
       Alert.alert('Hata', e.message);
+    }
+  };
+
+  const handleWashComplete = async (stationId: number) => {
+    try {
+      await completeWash(stationId);
+      setStations(await getStations());
+    } catch (e: any) {
+      // Backend polling zaten halleder, sessiz hata
+      console.log('Auto-complete error:', e.message);
     }
   };
 
@@ -215,6 +226,7 @@ export default function AdminScreen() {
                       key={s.id}
                       station={s}
                       onStatusChange={handleStationStatus}
+                      onComplete={handleWashComplete}
                     />
                   ))}
                 </View>
@@ -466,7 +478,7 @@ const WASH = {
   lowTime: '#ef4444',
 };
 
-function StationCard({ station: s, onStatusChange }: { station: Station; onStatusChange: (id: number, status: string) => void }) {
+function StationCard({ station: s, onStatusChange, onComplete }: { station: Station; onStatusChange: (id: number, status: string) => void; onComplete: (id: number) => void }) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -509,7 +521,7 @@ function StationCard({ station: s, onStatusChange }: { station: Station; onStatu
       {s.status === 'active' && s.start_time && s.total_duration ? (
         <View style={monStyles.activeInfo}>
           <Text style={monStyles.packageName}>{s.icon || '🚿'} {s.package_name}</Text>
-          <CountdownTimer remaining={remainingSec} total={totalSec} />
+          <CountdownTimer remaining={remainingSec} total={totalSec} onComplete={() => onComplete(s.id)} />
         </View>
       ) : (
         <View style={monStyles.idleInfo}>
@@ -535,15 +547,23 @@ function StationCard({ station: s, onStatusChange }: { station: Station; onStatu
   );
 }
 
-function CountdownTimer({ remaining, total }: { remaining: number; total: number }) {
+function CountdownTimer({ remaining, total, onComplete }: { remaining: number; total: number; onComplete?: () => void }) {
   const [sec, setSec] = useState(remaining);
+  const completedRef = useRef(false);
 
   useEffect(() => {
     setSec(remaining);
+    if (remaining > 0) completedRef.current = false;
   }, [remaining]);
 
   useEffect(() => {
-    if (sec <= 0) return;
+    if (sec <= 0) {
+      if (onComplete && !completedRef.current) {
+        completedRef.current = true;
+        onComplete();
+      }
+      return;
+    }
     const t = setTimeout(() => setSec((p) => Math.max(0, p - 1)), 1000);
     return () => clearTimeout(t);
   }, [sec]);
