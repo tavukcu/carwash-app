@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { useCountdown } from '../lib/useCountdown';
-import { playClick } from '../lib/sounds';
+import { playClick, playTick } from '../lib/sounds';
 import { K } from '../lib/theme';
 
 interface Props {
@@ -29,7 +29,10 @@ export default function WashModeSelector({ totalSeconds, onModeSwitch, onComplet
   useEffect(() => {
     if (isComplete) {
       onComplete();
+      return;
     }
+    const interval = setInterval(() => { playTick(); }, 1000);
+    return () => clearInterval(interval);
   }, [isComplete]);
 
   const toggle = (mode: 'foam' | 'wash') => {
