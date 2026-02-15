@@ -41,11 +41,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: K.fontXl,
     fontWeight: '800',
-    color: K.text,
+    color: '#ffffff',
   },
   subtitle: {
     fontSize: K.fontSm,
-    color: K.accent,
+    color: 'rgba(255,255,255,0.8)',
     marginTop: 2,
   },
 });

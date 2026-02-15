@@ -14,11 +14,13 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
+      <View style={styles.heroSection}>
         <Text style={styles.logo}>🚗💦</Text>
         <Text style={styles.title}>Self-Servis{'\n'}Arac Yikama</Text>
         <Text style={styles.subtitle}>Zamanli Self-Servis Yikama Sistemi</Text>
+      </View>
 
+      <View style={styles.content}>
         <View style={styles.buttons}>
           {buttons.map((b) => (
             <TouchableOpacity
@@ -48,29 +50,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: K.bg,
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 28,
+  heroSection: {
+    backgroundColor: K.bgHeader,
     paddingTop: 60,
+    paddingBottom: 36,
+    alignItems: 'center',
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
   },
   logo: {
     fontSize: K.iconSizeLg,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   title: {
     fontSize: 40,
     fontWeight: '900',
-    color: K.text,
+    color: '#fff',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: K.fontMd,
-    color: K.accent,
-    marginBottom: 48,
+    color: 'rgba(255,255,255,0.8)',
     fontWeight: '600',
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 28,
   },
   buttons: {
     width: '100%',
@@ -83,9 +90,14 @@ const styles = StyleSheet.create({
     padding: 30,
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: K.border,
     minHeight: K.btnHeight,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   btnIcon: {
     fontSize: K.iconSize,

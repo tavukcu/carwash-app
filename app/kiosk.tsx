@@ -309,13 +309,13 @@ const styles = StyleSheet.create({
     fontSize: K.fontSm, color: K.accent, textAlign: 'center', lineHeight: 22,
   },
   startBtn: {
-    backgroundColor: '#0d7a3e', paddingHorizontal: 40, paddingVertical: 24,
+    backgroundColor: '#16a34a', paddingHorizontal: 40, paddingVertical: 24,
     borderRadius: K.radiusSm, width: '100%', alignItems: 'center', minHeight: 76,
   },
   startText: { color: '#fff', fontSize: K.fontLg, fontWeight: '800' },
   doneContainer: { alignItems: 'center', paddingTop: 48 },
   doneIcon: { fontSize: 90, marginBottom: 24 },
-  doneText: { fontSize: 36, fontWeight: '800', color: K.green, marginBottom: 12 },
+  doneText: { fontSize: 36, fontWeight: '800', color: '#16a34a', marginBottom: 12 },
   doneHint: { fontSize: K.fontLg, color: K.textSecondary, marginBottom: 28 },
   autoReset: { fontSize: K.fontSm, color: K.textMuted },
 });

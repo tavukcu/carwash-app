@@ -210,13 +210,13 @@ export default function AdminScreen() {
                     </View>
                     <View style={styles.actionRow}>
                       <TouchableOpacity
-                        style={[styles.smallBtn, { backgroundColor: '#0d7a3e' }]}
+                        style={[styles.smallBtn, { backgroundColor: '#16a34a' }]}
                         onPress={() => handleStationStatus(s.id, 'idle')}
                       >
                         <Text style={styles.smallBtnText}>Bos</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[styles.smallBtn, { backgroundColor: '#c62828' }]}
+                        style={[styles.smallBtn, { backgroundColor: '#dc2626' }]}
                         onPress={() => handleStationStatus(s.id, 'maintenance')}
                       >
                         <Text style={styles.smallBtnText}>Bakimda</Text>
@@ -233,7 +233,7 @@ export default function AdminScreen() {
                 <View style={styles.headingRow}>
                   <Text style={styles.heading}>Paketler</Text>
                   <TouchableOpacity
-                    style={[styles.smallBtn, { backgroundColor: '#0d7a3e' }]}
+                    style={[styles.smallBtn, { backgroundColor: '#16a34a' }]}
                     onPress={() => { playClick(); setShowNewForm(!showNewForm); }}
                   >
                     <Text style={styles.smallBtnText}>{showNewForm ? 'Iptal' : '+ Paket Ekle'}</Text>
@@ -313,7 +313,7 @@ export default function AdminScreen() {
                             onChangeText={setEditDuration}
                           />
                           <TouchableOpacity
-                            style={[styles.smallBtn, { backgroundColor: '#0d7a3e' }]}
+                            style={[styles.smallBtn, { backgroundColor: '#16a34a' }]}
                             onPress={() => handlePackageUpdate(p.id)}
                           >
                             <Text style={styles.smallBtnText}>Kaydet</Text>
@@ -335,7 +335,7 @@ export default function AdminScreen() {
                           <Text style={styles.smallBtnText}>Duzenle</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                          style={[styles.smallBtn, { backgroundColor: '#c62828' }]}
+                          style={[styles.smallBtn, { backgroundColor: '#dc2626' }]}
                           onPress={() => handleDeletePackage(p.id, p.name)}
                         >
                           <Text style={styles.smallBtnText}>Sil</Text>
@@ -500,8 +500,8 @@ const styles = StyleSheet.create({
     borderBottomColor: K.accentBorder,
   },
   pageHeaderIcon: { fontSize: K.iconSize },
-  pageHeaderTitle: { fontSize: K.fontXl, fontWeight: '800', color: K.text },
-  pageHeaderSub: { fontSize: K.fontSm, color: K.accent, marginTop: 2 },
+  pageHeaderTitle: { fontSize: K.fontXl, fontWeight: '800', color: '#ffffff' },
+  pageHeaderSub: { fontSize: K.fontSm, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   tabBar: {
     maxHeight: 60, backgroundColor: K.bgCard, borderBottomWidth: 1,
     borderBottomColor: K.border,
