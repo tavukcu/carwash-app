@@ -6,7 +6,7 @@ import WebQRScanner from '../components/WebQRScanner';
 import WashModeSelector from '../components/WashModeSelector';
 import PageHeader from '../components/PageHeader';
 import { Station, getStations, verifyTicket, startWash, completeWash, logModeSwitch, VerifyTicketResponse } from '../lib/api';
-import { playClick, playBeep, playSuccess, playError, playComplete } from '../lib/sounds';
+import { playClick, playBeep, playSuccess, playError, playComplete, speak } from '../lib/sounds';
 import { K } from '../lib/theme';
 
 type Screen = 'stations' | 'scan' | 'confirm' | 'washing' | 'done';
@@ -43,6 +43,7 @@ export default function KioskScreen() {
     setSelectedStation(s);
     setScreen('scan');
     scanLock.current = false;
+    speak(`${s.name} seçildi. Lütfen QR kodunuzu okutunuz.`);
   };
 
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
@@ -66,6 +67,7 @@ export default function KioskScreen() {
       setTicketInfo(info);
       setScreen('confirm');
       playSuccess();
+      speak(`${info.package_name} bileti doğrulandı. Yıkamayı başlatabilirsiniz.`);
     } catch (e: any) {
       playError();
       Alert.alert('Gecersiz Bilet', e.message || 'QR kod dogrulanamadi');
@@ -84,6 +86,7 @@ export default function KioskScreen() {
       setActiveTicketId(result.ticket_id);
       setScreen('washing');
       playSuccess();
+      speak('Yıkama başlıyor. İyi yıkamalar!');
     } catch (e: any) {
       playError();
       Alert.alert('Hata', e.message || 'Yikama baslatilamadi');
@@ -103,6 +106,7 @@ export default function KioskScreen() {
     try {
       await completeWash(selectedStation.id);
       playComplete();
+      speak('Yıkama tamamlandı. Aracınızı alabilirsiniz. Teşekkür ederiz.');
     } catch {}
     setScreen('done');
     setTimeout(reset, 5000);

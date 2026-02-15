@@ -60,3 +60,42 @@ export function playTick() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
   }
 }
+
+// --- Sesli komut (Web Speech API) ---
+let trVoice: SpeechSynthesisVoice | null = null;
+let voicesLoaded = false;
+
+function loadVoice() {
+  if (!isWeb || voicesLoaded) return;
+  const pick = () => {
+    const voices = speechSynthesis.getVoices();
+    // Türkçe kadın sesi tercih et
+    const trFemale = voices.find(v => v.lang.startsWith('tr') && v.name.toLowerCase().includes('female'));
+    const trAny = voices.find(v => v.lang.startsWith('tr'));
+    trVoice = trFemale || trAny || null;
+    voicesLoaded = true;
+  };
+  pick();
+  if (!trVoice) {
+    speechSynthesis.onvoiceschanged = pick;
+  }
+}
+
+if (isWeb) {
+  loadVoice();
+}
+
+export function speak(text: string) {
+  if (!isWeb) return;
+  try {
+    if (!voicesLoaded) loadVoice();
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'tr-TR';
+    u.rate = 0.95;
+    u.pitch = 1.15;
+    u.volume = 1;
+    if (trVoice) u.voice = trVoice;
+    speechSynthesis.speak(u);
+  } catch {}
+}

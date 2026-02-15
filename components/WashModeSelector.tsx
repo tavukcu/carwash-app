@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { useCountdown } from '../lib/useCountdown';
-import { playClick, playTick } from '../lib/sounds';
+import { playClick, playTick, speak } from '../lib/sounds';
 import { K } from '../lib/theme';
 
 interface Props {
@@ -41,10 +41,12 @@ export default function WashModeSelector({ totalSeconds, onModeSwitch, onComplet
       const next = !foamOn;
       setFoamOn(next);
       onModeSwitch('foam', next ? 'on' : 'off');
+      speak(next ? 'Köpük açıldı' : 'Köpük kapatıldı');
     } else {
       const next = !washOn;
       setWashOn(next);
       onModeSwitch('wash', next ? 'on' : 'off');
+      speak(next ? 'Yıkama açıldı' : 'Yıkama kapatıldı');
     }
   };
 

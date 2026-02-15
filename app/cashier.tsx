@@ -4,7 +4,7 @@ import QRCode from 'react-native-qrcode-svg';
 import PackageGrid from '../components/PackageGrid';
 import PageHeader from '../components/PageHeader';
 import { TimePackage, getPackages, createTicket, CreateTicketResponse } from '../lib/api';
-import { playClick, playSuccess, playError } from '../lib/sounds';
+import { playClick, playSuccess, playError, speak } from '../lib/sounds';
 import { K } from '../lib/theme';
 
 type Step = 'package' | 'payment' | 'ticket';
@@ -27,6 +27,7 @@ export default function CashierScreen() {
   const handlePackageSelect = (p: TimePackage) => {
     setSelectedPackage(p);
     setStep('payment');
+    speak(`${p.name} paketi seçildi. Ödeme yöntemini seçiniz.`);
   };
 
   const handlePayment = async (method: 'cash' | 'card') => {
@@ -38,6 +39,7 @@ export default function CashierScreen() {
       setTicketData(data);
       setStep('ticket');
       playSuccess();
+      speak('Biletiniz hazır. QR kodu kiosk ekranında okutunuz.');
     } catch (e: any) {
       playError();
       Alert.alert('Hata', e.message || 'Bilet olusturulamadi');
