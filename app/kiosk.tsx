@@ -9,7 +9,7 @@ import { Station, getStations, verifyTicket, startWash, completeWash, logModeSwi
 import { playClick, playBeep, playSuccess, playError, playComplete, speak } from '../lib/sounds';
 import { K } from '../lib/theme';
 
-type Screen = 'stations' | 'scan' | 'confirm' | 'washing' | 'done';
+type Screen = 'stations' | 'scan' | 'confirm' | 'washing' | 'done' | 'error';
 
 export default function KioskScreen() {
   const [screen, setScreen] = useState<Screen>('stations');
@@ -18,6 +18,7 @@ export default function KioskScreen() {
   const [ticketInfo, setTicketInfo] = useState<VerifyTicketResponse | null>(null);
   const [scannedQR, setScannedQR] = useState('');
   const [manualQR, setManualQR] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [activeTicketId, setActiveTicketId] = useState<number | null>(null);
@@ -70,7 +71,10 @@ export default function KioskScreen() {
       speak(`${info.package_name} bileti doğrulandı. Yıkamayı başlatabilirsiniz.`);
     } catch (e: any) {
       playError();
-      Alert.alert('Gecersiz Bilet', e.message || 'QR kod dogrulanamadi');
+      const msg = e.message || 'QR kod dogrulanamadi';
+      setErrorMessage(msg);
+      setScreen('error');
+      speak(`Hata! ${msg}. Lütfen geçerli bir bilet kullanınız.`);
       scanLock.current = false;
     } finally {
       setProcessing(false);
@@ -255,6 +259,30 @@ export default function KioskScreen() {
           <Text style={styles.autoReset}>5 saniye icinde sifirlanacak...</Text>
         </View>
       )}
+
+      {/* Error */}
+      {screen === 'error' && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorIcon}>❌</Text>
+          <Text style={styles.errorTitle}>Gecersiz Bilet!</Text>
+          <View style={styles.errorCard}>
+            <Text style={styles.errorMessage}>{errorMessage}</Text>
+          </View>
+          <Text style={styles.errorHint}>Bu QR kod daha once kullanilmis veya suresi dolmus olabilir.</Text>
+          <TouchableOpacity
+            style={styles.errorBtn}
+            onPress={() => { playClick(); setScreen('scan'); scanLock.current = false; }}
+          >
+            <Text style={styles.errorBtnText}>Tekrar Dene</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => { playClick(); setScreen('stations'); }}
+          >
+            <Text style={styles.backText}>← Istasyon Secimi</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </ScrollView>
     </View>
   );
@@ -322,4 +350,19 @@ const styles = StyleSheet.create({
   doneText: { fontSize: 36, fontWeight: '800', color: '#16a34a', marginBottom: 12 },
   doneHint: { fontSize: K.fontLg, color: K.textSecondary, marginBottom: 28 },
   autoReset: { fontSize: K.fontSm, color: K.textMuted },
+  errorContainer: { alignItems: 'center', paddingTop: 32 },
+  errorIcon: { fontSize: 90, marginBottom: 20 },
+  errorTitle: { fontSize: 36, fontWeight: '900', color: K.red, marginBottom: 20 },
+  errorCard: {
+    backgroundColor: K.redBg, borderRadius: K.radius, padding: 24,
+    width: '100%', marginBottom: 20, borderWidth: 2, borderColor: K.redBorder,
+  },
+  errorMessage: { fontSize: K.fontLg, fontWeight: '700', color: K.red, textAlign: 'center' },
+  errorHint: { fontSize: K.fontMd, color: K.textSecondary, textAlign: 'center', marginBottom: 28, lineHeight: 28 },
+  errorBtn: {
+    backgroundColor: K.accent, paddingHorizontal: 40, paddingVertical: 22,
+    borderRadius: K.radiusSm, width: '100%', alignItems: 'center', minHeight: 76,
+    marginBottom: 12,
+  },
+  errorBtnText: { color: '#fff', fontSize: K.fontLg, fontWeight: '800' },
 });
